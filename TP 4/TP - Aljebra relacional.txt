@@ -1,0 +1,43 @@
+punto a
+pro := project proyecto (proyecto);
+
+punto b
+pro := project nombre, apellido (empleado);
+
+punto c
+empleado_con_intermedia := empleado njoin  proyemp;
+proyecto_con_intermedia := proyecto njoin proyemp;
+empleado_proyecto :=  empleado_con_intermedia njoin proyecto_con_intermedia;
+empleado_proyecto_p := project apellido, proyecto (empleado_proyecto);
+
+punto d
+empleado_con_intermedia := empleado njoin  proyemp;
+proyecto_con_intermedia := proyecto njoin proyemp;
+empleado_proyecto :=  empleado_con_intermedia njoin proyecto_con_intermedia;
+s_ventas := select proyecto =  'VENTAS' (proyecto);
+p_ventas := project proyecto (s_ventas);
+empleado_proyecto_s := select proyecto = 'VENTAS' (empleado_proyecto);
+empleado_proyecto_p := project apellido, proyecto (empleado_proyecto_s);
+
+punto e
+empleado_con_intermedia := empleado njoin  proyemp;
+proyecto_con_intermedia := proyecto njoin proyemp;
+empleado_proyecto :=  empleado_con_intermedia njoin proyecto_con_intermedia;
+compras_y_ecom := (select proyecto =  'COMPRAS' (proyecto)) union (select proyecto = 'E-COMERCE' (proyecto));
+p_ventas := project proyecto (compras_y_ecom);
+empleado_proyecto_s := (select proyecto = 'COMPRAS' (empleado_proyecto)) union (select proyecto = 'E-COMERCE' (empleado_proyecto));
+empleado_proyecto_p := project apellido, proyecto (empleado_proyecto_s);
+
+punto f
+empleado_x_proyecto := empleado product proyecto;
+empleado_proyemp := project idempleado, idproy (empleado_x_proyecto);
+diferencia := empleado_proyemp difference proyemp;
+empleado_diferencia :=empleado njoin( (project idempleado(empleado)) difference (project idempleado(diferencia)));
+
+punto g
+empleado_x_proyecto := empleado product proyecto;
+empleado_proyemp := project idempleado, idproy (empleado_x_proyecto);
+diferencia := empleado_proyemp difference proyemp;
+empleado_diferencia :=empleado njoin( (project idempleado(empleado)) difference (project idempleado(diferencia)));
+ul:=project idempleado(proyemp);
+ultimo:=(project idempleado(empleado)) difference ul;
