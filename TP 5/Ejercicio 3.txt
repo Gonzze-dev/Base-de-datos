@@ -1,0 +1,7 @@
+infraccion1 := project dni, fecha (infraccion);
+copia_infraccion(dnic, fechac) := infraccion1;
+mult_infraccion := infraccion1 product copia_infraccion;
+
+resultado := select dni = dnic and fecha <> fechac (mult_infraccion);
+result_pro := project dni (resultado);
+resultado_final := result_pro njoin persona;

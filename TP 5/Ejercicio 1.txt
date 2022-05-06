@@ -1,0 +1,3 @@
+no_pago := select pagada = 0 (project codPostal, dni, pagada (infraccion));
+localidades_corrientes := select idProvincia = 2 (localidad);
+no_pagos_corrientes := project dni, localidad(no_pago njoin localidades_corrientes);

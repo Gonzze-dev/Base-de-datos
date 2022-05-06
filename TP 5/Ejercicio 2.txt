@@ -1,0 +1,4 @@
+infracciones := 
+	(select fecha > 19900101 (infraccion)) 
+	intersect 
+	(select fecha < 19910101 (infraccion));

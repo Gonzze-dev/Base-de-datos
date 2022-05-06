@@ -1,0 +1,2 @@
+JAVA_VERSION="14.0.1"
+MODULES="java.base amzi java.datatransfer java.xml java.prefs java.desktop java.logging java.transaction.xa java.sql asu.winrdbi"
