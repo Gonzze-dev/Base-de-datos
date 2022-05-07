@@ -1,0 +1,10 @@
+project_persona := project dni (persona);
+project_infraccion := project dni, patente (infraccion);
+
+join_patente_infraccion := project_persona njoin project_infraccion;
+join_patente_infraccion_copia(dnic, patentec)  := join_patente_infraccion;
+produc := join_patente_infraccion product join_patente_infraccion_copia;
+
+select_join_patente_infraccion := select dni = dnic and patente <> patentec (produc);
+
+pro_select := project dni (select_join_patente_infraccion);
