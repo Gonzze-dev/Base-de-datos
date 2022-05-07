@@ -1,0 +1,17 @@
+Ejercicio
+vehiculos_infraccion := vehiculo njoin infraccion;
+vehiculos_infraccion_valuados := vehiculos_infraccion njoin valuacion;
+projec_vehiculos_infraccion_valuados  := project  patente (vehiculos_infraccion_valuados);
+njoin_veh_infra := projec_vehiculos_infraccion_valuados njoin infraccion;
+autos_no_valuados_infraccion := infraccion difference njoin_veh_infra;
+
+
+Verificacion
+vehiculos_infraccion := vehiculo njoin infraccion;
+vehiculos_infraccion_valuados := vehiculos_infraccion njoin valuacion;
+projec_vehiculos_infraccion_valuados  := project  patente (vehiculos_infraccion_valuados);
+njoin_veh_infra := projec_vehiculos_infraccion_valuados njoin infraccion;
+autos_no_valuados_infraccion := infraccion difference njoin_veh_infra;
+projec_autos_no_valuados_infraccion:= project patente (autos_no_valuados_infraccion);
+val := projec_autos_no_valuados_infraccion njoin vehiculo;
+val2 := val njoin valuacion;
