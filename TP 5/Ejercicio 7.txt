@@ -1,0 +1,14 @@
+p_infraccion := project dni, idInfraccion (infraccion);
+copia_infraccion(dniC, idInfraccionC) := p_infraccion;
+mult_infraccion := p_infraccion product copia_infraccion;
+
+resultado := 
+select dni = dniC and idInfraccion <> idInfraccionC (mult_infraccion);
+result_pro := project dni (resultado);
+
+mas_de_una_infraccion := result_pro njoin infraccion;
+estado_ebrio_con_mas_de_una_infraccion := select tipoInfraccion = 7 (mas_de_una_infraccion);
+
+dniEbriosConMasDeUnaInfraccion := project dni (estado_ebrio_con_mas_de_una_infraccion);
+
+personasEbriasConMasDeUnaInfraccion := dniEbriosConMasDeUnaInfraccion njoin persona;

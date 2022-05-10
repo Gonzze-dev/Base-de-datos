@@ -1,0 +1,7 @@
+patenteModeloV := project patente, idModelo (vehiculo);
+vehiculoJModelo := patenteModeloV njoin modelo;
+
+esImportado := 
+select importado = 1 (vehiculoJModelo);
+
+infraccionesImportados := esImportado njoin infraccion;

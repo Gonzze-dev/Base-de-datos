@@ -1,3 +1,10 @@
-no_pago := select pagada = 0 (project codPostal, dni, pagada (infraccion));
-localidades_corrientes := select idProvincia = 2 (localidad);
-no_pagos_corrientes := project dni, localidad(no_pago njoin localidades_corrientes);
+proy_infraccion := project dni, pagada (select pagada = 0(infraccion));
+proy_persona := project dni, nombre, codPostal (persona);
+proy_localidad := project codPostal, idProvincia (localidad);
+proy_provincia := project idProvincia (provincia);
+
+join_infra_persona := proy_infraccion njoin proy_persona;
+join_loc_prov := proy_localidad njoin proy_provincia;
+
+join_ambos := join_infra_persona njoin join_loc_prov;
+select_persona_corrientes := project dni, nombre (select idProvincia = 2 (join_ambos));

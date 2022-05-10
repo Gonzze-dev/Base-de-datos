@@ -1,0 +1,14 @@
+persona_vehiculo := persona njoin vehiculo;
+p_persona_vehiculo(dniC, patenteC) := project dni, patente (persona_vehiculo);
+
+p_persona_vehiculo_X_infraccion := p_persona_vehiculo product infraccion;
+
+infraccion_personas_vehiculo_no_propio :=
+select
+dni <> dniC
+and
+patente = patenteC
+(p_persona_vehiculo_X_infraccion);
+
+infraccion_personas_vehiculo_no_propio_DNI(dni) := project dniC (infraccion_personas_vehiculo_no_propio);
+personas_infraccion_no_titulares := infraccion_personas_vehiculo_no_propio_DNI njoin persona;

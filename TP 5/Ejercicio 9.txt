@@ -1,0 +1,9 @@
+patenteModeloV := project patente, idModelo (vehiculo);
+vehiculoJModelo := patenteModeloV njoin modelo;
+vehiculoJMarca := vehiculoJModelo njoin marca;
+
+vehiculosMontenegro := select marca = 'MONTENEGRO' (vehiculoJMarca);
+
+patentesMarcaMontenegro := project patente (vehiculosMontenegro);
+
+infraccionesMarcMontenegro := patentesMarcaMontenegro njoin infraccion;
