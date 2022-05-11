@@ -10,5 +10,5 @@ and
 patente = patenteC
 (p_persona_vehiculo_X_infraccion);
 
-infraccion_personas_vehiculo_no_propio_DNI(dni) := project dniC (infraccion_personas_vehiculo_no_propio);
+infraccion_personas_vehiculo_no_propio_DNI := project dni (infraccion_personas_vehiculo_no_propio);
 personas_infraccion_no_titulares := infraccion_personas_vehiculo_no_propio_DNI njoin persona;
