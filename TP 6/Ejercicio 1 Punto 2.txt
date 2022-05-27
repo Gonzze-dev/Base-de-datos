@@ -1,0 +1,31 @@
+a) SELECT * FROM empleado;
+
+b) SELECT * FROM empleado WHERE genero = 'M';
+
+c1) SELECT * FROM empleado
+WHERE sueldo = (SELECT max(sueldo) FROM empleado)
+    OR sueldo = (SELECT min(sueldo) FROM empleado);
+
+
+c2) SELECT (SUM(sueldo)/COUNT(*)) AS Promedio_Sueldo FROM empleado;
+
+d) SELECT * FROM empleado WHERE sueldo > 20000;
+
+e) SELECT (SUM(sueldo)/COUNT(*)) AS Promedio_Sueldo 
+FROM empleado
+INNER JOIN trabajapara ON empleado.dni = trabajapara.dni
+INNER JOIN departamento on trabajapara.codigo = departamento.codigo
+WHERE departamento.nombre = 'COMPUTOS';
+
+f) SELECT SUM(horas) AS horas_produccion 
+FROM empleado
+INNER JOIN trabajapara ON empleado.dni = trabajapara.dni
+INNER JOIN departamento on trabajapara.codigo = departamento.codigo
+WHERE departamento.nombre = 'PRODUCCION';
+
+g) SELECT empleado.nombre
+FROM empleado
+INNER JOIN trabajapara ON empleado.dni = trabajapara.dni
+INNER JOIN departamento on trabajapara.codigo = departamento.codigo
+WHERE departamento.nombre = 'DEPOSITO'
+    AND horas >= 25;

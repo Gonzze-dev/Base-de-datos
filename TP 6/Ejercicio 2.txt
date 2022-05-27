@@ -1,0 +1,29 @@
+a) SELECT * FROM pc WHERE veloc >= 150;
+
+b) SELECT producto.fabricante
+FROM producto
+INNER JOIN notebook ON producto.cod = notebook.cod
+WHERE notebook.hd >= 1;
+
+c) SELECT producto.cod, CONCAT(pc.precio, notebook.precio,impresora.precio) AS precio
+FROM producto
+LEFT JOIN notebook ON producto.cod = notebook.cod
+LEFT JOIN pc ON producto.cod = pc.cod
+LEFT JOIN impresora ON producto.cod = impresora.cod
+WHERE producto.fabricante = 'B';
+
+d) SELECT producto.cod FROM producto
+INNER JOIN impresora ON producto.cod = impresora.cod
+WHERE impresora.color = true;
+
+e) SELECT producto.fabricante FROM producto
+INNER JOIN notebook ON producto.cod = notebook.cod
+EXCEPT
+SELECT producto.fabricante FROM producto
+INNER JOIN pc ON producto.cod = pc.cod;
+
+f)
+
+
+
+
