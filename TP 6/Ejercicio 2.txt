@@ -22,8 +22,25 @@ EXCEPT
 SELECT producto.fabricante FROM producto
 INNER JOIN pc ON producto.cod = pc.cod;
 
-f)
+f) SELECT DISTINCT hd FROM pc p
+WHERE (SELECT COUNT(*) FROM pc p2
+        WHERE p2.hd = p.hd) >= 2;
 
+g) SELECT DISTINCT producto.fabricante FROM producto
+LEFT JOIN pc ON producto.cod = pc.cod
+LEFT JOIN notebook ON producto.cod = notebook.cod
+where pc.veloc >= 133 or notebook.veloc >= 133;
+
+h) SELECT DISTINCT producto.fabricante FROM producto
+LEFT JOIN pc ON producto.cod = pc.cod
+LEFT JOIN notebook ON producto.cod = notebook.cod
+where pc.veloc = (SELECT max(pc.veloc) FROM pc) 
+OR notebook.veloc = (SELECT max(notebook.veloc) FROM notebook);
+
+i) SELECT DISTINCT P.cod, p2.cod FROM pc p
+INNER JOIN (SELECT * FROM PC) as p2 ON p.cod > p2.cod
+WHERE (p.veloc = p2.veloc and p.ram = p2.ram);
+ 
 
 
 
