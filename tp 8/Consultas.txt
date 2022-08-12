@@ -1,0 +1,70 @@
+A)
+SELECT ROUND((b.cantMesas * 100) / a.cantTotalMesas)
+FROM (SELECT COUNT(mesa.nromesa) AS cantTotalMesas from mesa) AS a,
+    (SELECT COUNT(votosxmesa.nromesa) AS cantMesas from votosxmesa) AS b
+
+B)
+SELECT escuela.nombreescuela, votosxmesatotal.idesc, SUM(votosxmesatotal.votos)
+FROM
+    (
+        SELECT a.idesc AS idesc, (b.blancos + b.nulos + b.recurridos + b.impugnados) AS votos
+        FROM mesa AS a
+        LEFT JOIN votosxmesa AS b ON a.nromesa = b.nromesa
+     ) AS votosxmesatotal
+LEFT JOIN escuela ON escuela.idesc = votosxmesatotal.idesc
+GROUP BY escuela.nombreescuela, votosxmesatotal.idesc
+ORDER BY votosxmesatotal.idesc
+
+C) 
+SELECT circuito.idcircuito, circuito.nombrecirc, SUM(votosxescuela.votos)
+FROM (
+SELECT escuela.nombreescuela, votosxmesatotal.idesc, escuela.idcircuito, SUM(votosxmesatotal.votos) AS votos
+FROM
+    (
+        SELECT a.idesc AS idesc,  (b.blancos + b.nulos + b.recurridos + b.impugnados) AS votos
+        FROM mesa AS a
+        LEFT JOIN votosxmesa AS b ON a.nromesa = b.nromesa
+     ) AS votosxmesatotal
+LEFT JOIN escuela ON escuela.idesc = votosxmesatotal.idesc
+GROUP BY escuela.nombreescuela, votosxmesatotal.idesc, escuela.idcircuito
+ORDER BY votosxmesatotal.idesc
+) AS votosxescuela
+LEFT JOIN circuito ON circuito.idcircuito = votosxescuela.idcircuito
+GROUP BY circuito.idcircuito, circuito.nombrecirc
+ORDER BY circuito.idcircuito
+
+D) 
+SELECT ((votospartido.votosxpartido*100.00)/votostotal.votostotales)
+FROM (
+    SELECT e.nrop, e.nombrep, SUM(a.votospartido) as votosxpartido
+    FROM votosmesapartido AS a
+    LEFT JOIN mesa AS b ON b.nromesa = b.nromesa
+    LEFT JOIN escuela AS c ON c.idesc = b.idesc
+    LEFT JOIN circuito AS d ON d.idcircuito = c.idcircuito
+    LEFT JOIN partido AS e ON e.nrop = a.nropartido
+    WHERE d.nombrecirc LIKE 'SUBURBIO NORTE' AND e.nombrep LIKE 'PRO'
+    GROUP BY e.nrop, e.nombrep
+) AS votospartido,
+(
+    SELECT SUM(a.votospartido) as votostotales
+    FROM votosmesapartido AS a
+    LEFT JOIN mesa AS b ON b.nromesa = b.nromesa
+    LEFT JOIN escuela AS c ON c.idesc = b.idesc
+    LEFT JOIN circuito AS d ON d.idcircuito = c.idcircuito
+    LEFT JOIN partido AS e ON e.nrop = a.nropartido
+    WHERE d.nombrecirc LIKE 'SUBURBIO NORTE'
+    GROUP BY d.nombrecirc LIKE 'SUBURBIO NORTE'
+) AS votostotal
+
+E)
+SELECT e.nrop, e.nombrep, c.nombreescuela, SUM(a.votospartido) as votosxpartido
+FROM votosmesapartido AS a
+LEFT JOIN mesa AS b ON b.nromesa = b.nromesa
+LEFT JOIN escuela AS c ON c.idesc = b.idesc
+LEFT JOIN partido AS e ON e.nrop = a.nropartido
+WHERE c.nombreescuela = '92 TUCUMAN' AND e.nombrep LIKE 'MST'
+GROUP BY e.nrop, e.nombrep, c.nombreescuela
+
+F)
+SELECT SUM(votospartido) AS votosvalidos
+FROM votosmesapartido
