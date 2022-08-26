@@ -68,3 +68,33 @@ GROUP BY e.nrop, e.nombrep, c.nombreescuela
 F)
 SELECT SUM(votospartido) AS votosvalidos
 FROM votosmesapartido
+
+G)
+SELECT ROUND((votosInvalidos*100.00)/(votosValidos + votosInvalidos)) AS porscVotosInvalidos
+FROM (select SUM(votospartido) AS votosValidos from votosmesapartido) AS a,
+    (select (SUM(blancos) + SUM(nulos) + SUM(recurridos) + SUM(impugnados)) AS votosInvalidos
+    from votosxmesa) AS b
+
+H)
+SELECT nroPartido, ROUND(SUM(votospartido.votospartido) * 100.00 / (a.votosValidos + b.votosInvalidos))
+FROM (select SUM(votospartido) AS votosValidos from votosmesapartido) AS a,
+    (select (SUM(blancos) + SUM(nulos) + SUM(recurridos) + SUM(impugnados)) AS votosInvalidos
+    from votosxmesa) AS b, votosmesapartido as votospartido
+ GROUP BY nroPartido, a.votosValidos, b.votosInvalidos
+
+I)
+SELECT nroPartido, ROUND(SUM(votospartido.votospartido) * 100.00 / a.votosValidos)
+FROM (select SUM(votospartido) AS votosValidos from votosmesapartido) AS a, 
+     votosmesapartido as votospartido
+ GROUP BY nroPartido, a.votosValidos
+ ORDER BY nroPartido
+
+J)
+SELECT nroPartido, (sum(votospartido.votospartido) + sum(a.blancos) + sum(a.impugnados) + sum(a.nulos) + sum(a.recurridos)) AS votosTotalesPorLista
+FROM votosmesapartido as votospartido
+INNER JOIN votosxmesa as a ON a.nroMesa = votospartido.nromesa
+GROUP BY nroPartido
+
+
+
+
