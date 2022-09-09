@@ -201,3 +201,26 @@ o) SELECT partido.nrop, a.idcircuitog, partido.nombrep, a.votos FROM(
     ORDER BY idcircuitoG
 ) as a
 INNER JOIN partido ON partido.nrop = a.nropartidog
+
+p)
+
+CREATE OR REPLACE FUNCTION getVotosTotal()
+RETURNS bigint AS
+$$
+DECLARE
+    total bigint;
+BEGIN
+    SELECT sum(a.votospartido) INTO total FROM partido
+    JOIN votosmesapartido as a ON partido.nrop = a.nropartido;
+    
+    return total;
+END;
+$$
+language plpgsql
+
+SELECT * FROM (SELECT partido.nrop, partido.nombrep, 
+    ((sum(votosmesapartido.votospartido)*100.00) / getVotosTotal) AS porcVotos
+FROM (select getVotosTotal()) as a, partido
+INNER JOIN votosmesapartido ON partido.nrop = votosmesapartido.nropartido
+GROUP BY partido.nrop, partido.nombrep, getVotosTotal) as a
+WHERE a.porcvotos >= 5
