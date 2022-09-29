@@ -1,0 +1,43 @@
+CREATE OR REPLACE FUNCTION listaGanadoraCircuito(int)
+RETURNS TABLE (idcirc int, nroPartido smallint, votos bigint)  AS
+$listaGanadoraCircuito$
+BEGIN
+    RETURN QUERY
+    SELECT b.idCircuitoG, b.nroPartidoG, b.votos
+    FROM
+        (
+            SELECT DISTINCT idcircuitoG, MAX(votosTotal) as votos
+            FROM
+                (
+                    SELECT mesa.nroMesa AS nroMesaG, circuito.idcircuito AS idcircuitoG, 
+                    votosmesapartido.nropartido AS nroPartidoG, SUM(votosPartido) AS votosTotal from mesa
+                    LEFT JOIN escuela ON escuela.idesc = mesa.idesc
+                    LEFT JOIN votosmesapartido ON votosmesapartido.nromesa = mesa.nromesa
+                    LEFT JOIN circuito ON circuito.idcircuito = escuela.idcircuito
+                    GROUP BY mesa.nromesa, circuito.idcircuito, votosmesapartido.nropartido
+                    ORDER BY mesa.nroMesa
+                ) AS a
+            GROUP BY idcircuitoG
+        ) AS a
+    INNER JOIN 
+    (
+        SELECT nroPartidoG, idcircuitoG, MAX(votosTotal) as votos
+        FROM
+            (
+                SELECT mesa.nroMesa AS nroMesaG, circuito.idcircuito AS idcircuitoG, 
+                votosmesapartido.nropartido AS nroPartidoG, SUM(votosPartido) AS votosTotal from mesa
+                LEFT JOIN escuela ON escuela.idesc = mesa.idesc
+                LEFT JOIN votosmesapartido ON votosmesapartido.nromesa = mesa.nromesa
+                LEFT JOIN circuito ON circuito.idcircuito = escuela.idcircuito
+                GROUP BY mesa.nromesa, circuito.idcircuito, votosmesapartido.nropartido
+                ORDER BY mesa.nroMesa
+            ) AS a
+         GROUP BY nroPartidoG, idcircuitoG
+         ORDER BY idcircuitoG, votos DESC
+    ) AS b ON a.votos = b.votos
+    WHERE b.idCircuitoG = $1
+    ORDER BY idcircuitoG;
+    
+END;
+$listaGanadoraCircuito$
+language plpgsql

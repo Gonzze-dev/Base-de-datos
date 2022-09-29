@@ -1,0 +1,32 @@
+CREATE OR REPLACE FUNCTION porcVotosObtenidos(varchar(255), varchar(255))
+RETURNS numeric AS
+$porcVotosObtenidos$
+DECLARE
+    porc numeric;
+BEGIN
+    SELECT ((votospartido.votosxpartido*100.00)/votostotal.votostotales) INTO porc
+        FROM (
+            SELECT e.nrop, e.nombrep, SUM(a.votospartido) as votosxpartido
+            FROM votosmesapartido AS a
+            LEFT JOIN mesa AS b ON b.nromesa = b.nromesa
+            LEFT JOIN escuela AS c ON c.idesc = b.idesc
+            LEFT JOIN circuito AS d ON d.idcircuito = c.idcircuito
+            LEFT JOIN partido AS e ON e.nrop = a.nropartido
+            WHERE d.nombrecirc LIKE $2 AND e.nombrep LIKE $1
+            GROUP BY e.nrop, e.nombrep
+        ) AS votospartido,
+        (
+            SELECT SUM(a.votospartido) as votostotales
+            FROM votosmesapartido AS a
+            LEFT JOIN mesa AS b ON b.nromesa = b.nromesa
+            LEFT JOIN escuela AS c ON c.idesc = b.idesc
+            LEFT JOIN circuito AS d ON d.idcircuito = c.idcircuito
+            LEFT JOIN partido AS e ON e.nrop = a.nropartido
+            WHERE d.nombrecirc LIKE $2
+            GROUP BY d.nombrecirc LIKE $2
+        ) AS votostotal;
+    
+    RETURN porc;
+END;
+$porcVotosObtenidos$
+language plpgsql

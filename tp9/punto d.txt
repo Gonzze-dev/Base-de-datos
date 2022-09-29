@@ -1,0 +1,20 @@
+CREATE OR REPLACE FUNCTION primerosCuatroPorEscuela(int)
+RETURNS TABLE (idescG int, nroPartidoG smallint, votosTotal bigint) 
+language plpgsql
+AS
+$primerosCuatroPorEscuela$
+BEGIN
+    RETURN QUERY
+    SELECT  escuela.idesc, 
+            votosmesapartido.nropartido, 
+            SUM(votosPartido) from mesa
+    JOIN escuela ON escuela.idesc = mesa.idesc
+    JOIN votosmesapartido ON votosmesapartido.nromesa = mesa.nromesa
+    WHERE (votosmesapartido.nropartido IS NOT NULL)
+            AND (escuela.idesc=$1)
+    GROUP BY escuela.idesc, votosmesapartido.nropartido
+    order by escuela.idesc asc, SUM desc
+    limit 4;
+END;
+$primerosCuatroPorEscuela$
+language plpgsql
