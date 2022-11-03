@@ -1,0 +1,178 @@
+CREATE TABLE IF NOT EXISTS pais
+(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(60) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS provincia
+(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(60) NOT NULL,
+    id_pais INTEGER NOT NULL,
+    
+    CONSTRAINT FK_id_pais FOREIGN KEY (id_pais) REFERENCES pais(id)
+);
+
+CREATE TABLE IF NOT EXISTS ciudad
+(
+    cp INTEGER PRIMARY KEY NOT NULL,
+    nombre VARCHAR(60) NOT NULL,
+    id_provincia INTEGER NOT NULL,
+    
+    CONSTRAINT FK_id_provincia FOREIGN KEY (id_provincia) REFERENCES provincia(id)
+);
+
+CREATE TABLE IF NOT EXISTS idioma
+(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS autor
+(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    email VARCHAR,
+    telefono VARCHAR
+);
+
+CREATE TABLE IF NOT EXISTS tema
+(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS editorial
+(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS libro
+(
+    isbn VARCHAR PRIMARY KEY NOT NULL,
+    imagen VARCHAR NOT NULL,
+    titulo VARCHAR(40) NOT NULL,
+    fecha_edicion DATE NOT NULL,
+    precio NUMERIC NOT NULL,
+    stock INTEGER NOT NULL,
+    descripcion VARCHAR NOT NULL,
+    fecha_ingreso DATE NOT NULL DEFAULT CURRENT_DATE,
+    id_editorial INTEGER NOT NULL,
+    id_idioma INTEGER NOT NULL,
+    
+    CONSTRAINT FK_id_editorial FOREIGN KEY (id_editorial) REFERENCES editorial(id),
+    CONSTRAINT FK_id_idioma FOREIGN KEY (id_idioma) REFERENCES idioma(id)
+);
+
+CREATE TABLE IF NOT EXISTS compra_libro
+(
+    id SERIAL PRIMARY KEY,
+    fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+    isbn varchar NOT NULL,
+    cantidad INTEGER NOT NULL,
+    
+    CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn)
+);
+
+CREATE TABLE IF NOT EXISTS asignar_tema
+(
+    isbn varchar NOT NULL,
+    id_tema INTEGER NOT NULL,
+    
+    CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
+    CONSTRAINT FK_id_tema FOREIGN KEY (id_tema) REFERENCES tema(id)
+);
+
+CREATE TABLE IF NOT EXISTS escrito_por
+(
+    isbn varchar NOT NULL,
+    id_autor INTEGER NOT NULL,
+    
+    CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
+    CONSTRAINT FK_id_autor FOREIGN KEY (id_autor) REFERENCES autor(id)
+);
+
+CREATE TABLE IF NOT EXISTS carrito
+(
+    id SERIAL PRIMARY KEY,
+    fecha DATE NOT NULL DEFAULT CURRENT_DATE
+);
+
+CREATE TABLE IF NOT EXISTS usuario
+(
+    cuil BIGINT NOT NULL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    contraseña VARCHAR NOT NULL,
+    correo VARCHAR NOT NULL,
+    admin BOOLEAN DEFAULT false,
+    id_carrito SERIAL NOT NULL,
+    
+    CONSTRAINT FK_id_carrito FOREIGN KEY (id_carrito) REFERENCES carrito(id)
+);
+
+CREATE TABLE IF NOT EXISTS favorito
+(
+    cuil BIGINT NOT NULL,
+    isbn varchar NOT NULL,
+    CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil),
+    CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn)
+);
+
+CREATE TABLE IF NOT EXISTS linea_carrito
+(
+    nro_linea SERIAL PRIMARY KEY,
+    cantidad INT NOT NULL,
+    isbn varchar NOT NULL,
+    id_carrito INTEGER NOT NULL,
+    
+    CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
+    CONSTRAINT FK_id_carrito FOREIGN KEY (id_carrito) REFERENCES carrito(id)
+);
+
+CREATE TABLE IF NOT EXISTS direccion
+(
+    id SERIAL PRIMARY KEY,
+    calle INT NOT NULL,
+    numero BIGINT NOT NULL,
+    piso_departamento varchar(10) NOT NULL,
+    telefono VARCHAR NOT NULL,
+    cuil BIGINT NOT NULL,
+    cp INT NOT NULL,
+    
+    CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil),
+    CONSTRAINT FK_cp FOREIGN KEY (cp) REFERENCES ciudad(cp)
+);
+
+
+CREATE TABLE IF NOT EXISTS cupon
+(
+    codigo VARCHAR PRIMARY KEY,
+    porc_descuento NUMERIC NOT NULL,
+    usado BOOLEAN NOT NULL DEFAULT false
+);
+
+CREATE TABLE IF NOT EXISTS orden
+(
+    id SERIAL PRIMARY KEY,
+    fecha INT NOT NULL,
+    total NUMERIC NOT NULL,
+    codigo_cupon VARCHAR NOT NULL,
+    cuil BIGINT NOT NULL,
+    id_direccion INT NOT NULL,
+    
+    CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil),
+    CONSTRAINT FK_id_direccion FOREIGN KEY (id_direccion) REFERENCES direccion(id)
+);
+
+CREATE TABLE IF NOT EXISTS orden_detalle
+(
+    id SERIAL PRIMARY KEY,
+    precio NUMERIC NOT NULL,
+    cantidad INT NOT NULL,
+    id_orden INT NOT NULL,
+    isbn varchar NOT NULL,
+    
+    CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
+    CONSTRAINT FK_orden FOREIGN KEY (id_orden) REFERENCES orden(id)
+);

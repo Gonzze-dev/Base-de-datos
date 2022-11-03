@@ -1,0 +1,83 @@
+CREATE OR REPLACE FUNCTION mailExists(correoU VARCHAR) RETURNS BOOLEAN 
+AS
+$existeCorreo$
+DECLARE
+    correoRegistrado BOOLEAN;
+BEGIN
+    correoRegistrado = EXISTS(SELECT correo FROM usuario WHERE correo = correoU);
+
+ RETURN correoRegistrado;
+END;
+$existeCorreo$ 
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION cuilExists(cuilU BIGINT) RETURNS BOOLEAN 
+AS
+$existeCuil$
+DECLARE
+    cuilRegistrado BOOLEAN;
+BEGIN
+    cuilRegistrado = EXISTS(SELECT cuil FROM usuario WHERE cuil = cuilU);
+
+ RETURN cuilRegistrado;
+END;
+$existeCuil$ 
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION validPassword(correoU VARCHAR, contraseniaU VARCHAR) RETURNS BOOLEAN
+AS
+$contraseniaValida$
+DECLARE
+    contraseniaV BOOLEAN;
+BEGIN
+    contraseniaV = EXISTS(SELECT contrasenia FROM usuario WHERE correo = correoU AND contrasenia = contraseniaU);
+
+ RETURN contraseniaV;
+END;
+$contraseniaValida$ 
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION getUserByMail(correoU VARCHAR) 
+RETURNS TABLE (cuil BIGINT, 
+               nombre VARCHAR(60),
+               contrasenia VARCHAR,
+               correo VARCHAR,
+               admin BOOLEAN,
+              id_carrito INT)
+AS
+$getUsuerByCorreo$
+BEGIN
+
+ RETURN QUERY SELECT * FROM usuario WHERE usuario.correo = correoU;
+END;
+$getUsuerByCorreo$ 
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION insertUser(cuilU BIGINT, 
+                                      nombreU VARCHAR(60),
+                                     contraseniaU VARCHAR,
+                                     correoU VARCHAR) RETURNS BOOLEAN
+AS
+$getUsuario$
+DECLARE
+    existeCuil BOOLEAN;
+    existeCorreo BOOLEAN;
+    noExisteUsuario BOOLEAN;
+    
+BEGIN
+ 
+ SELECT * INTO existeCuil FROM cuilExists(cuilU);
+ SELECT * INTO existeCorreo FROM mailExists(correoU);
+ noExisteUsuario = NOT (existeCuil OR existeCorreo);
+ 
+ IF noExisteUsuario THEN
+     INSERT INTO usuario (cuil, nombre, contrasenia, correo)
+     VALUES (cuilU, nombreU, contraseniaU, correoU);
+ END IF;
+ 
+ RETURN noExisteUsuario;
+END;
+$getUsuario$
+LANGUAGE plpgsql;
+
+

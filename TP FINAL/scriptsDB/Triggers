@@ -1,0 +1,22 @@
+CREATE OR REPLACE FUNCTION crearCarrito() RETURNS TRIGGER AS
+$crearCarritoCuandoSeCreaUsuario$
+BEGIN
+        INSERT INTO carrito (fecha) VALUES (DEFAULT);
+ RETURN NEW;
+END;
+$crearCarritoCuandoSeCreaUsuario$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_crearCarrito BEFORE INSERT ON usuario
+FOR EACH ROW EXECUTE PROCEDURE crearCarrito(); 
+
+CREATE OR REPLACE FUNCTION eliminarCarrito() RETURNS TRIGGER AS
+$eliminarCarritoCuandoSeEliminaUsuario$
+BEGIN
+        DELETE FROM carrito WHERE id = OLD.id_carrito;
+ RETURN NEW;
+END;
+$eliminarCarritoCuandoSeEliminaUsuario$ 
+LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_eliminarCarrito AFTER DELETE ON usuario
+FOR EACH ROW EXECUTE PROCEDURE eliminarCarrito();
