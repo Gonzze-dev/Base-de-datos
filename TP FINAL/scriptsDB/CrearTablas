@@ -1,13 +1,13 @@
 CREATE TABLE IF NOT EXISTS pais
 (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(60) NOT NULL
+    nombre VARCHAR(60) unique NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS provincia
 (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(60) NOT NULL,
+    nombre VARCHAR(60) unique NOT NULL,
     id_pais INTEGER NOT NULL,
     
     CONSTRAINT FK_id_pais FOREIGN KEY (id_pais) REFERENCES pais(id)
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS provincia
 CREATE TABLE IF NOT EXISTS ciudad
 (
     cp INTEGER PRIMARY KEY NOT NULL,
-    nombre VARCHAR(60) NOT NULL,
+    nombre VARCHAR(60) unique NOT NULL,
     id_provincia INTEGER NOT NULL,
     
     CONSTRAINT FK_id_provincia FOREIGN KEY (id_provincia) REFERENCES provincia(id)
@@ -31,21 +31,19 @@ CREATE TABLE IF NOT EXISTS idioma
 CREATE TABLE IF NOT EXISTS autor
 (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    email VARCHAR,
-    telefono VARCHAR
+    nombre VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS tema
 (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR NOT NULL
+    nombre VARCHAR unique NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS editorial
 (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR NOT NULL
+    nombre VARCHAR unique NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS libro
@@ -103,7 +101,7 @@ CREATE TABLE IF NOT EXISTS usuario
 (
     cuil BIGINT NOT NULL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    contraseña VARCHAR NOT NULL,
+    contrasenia VARCHAR NOT NULL,
     correo VARCHAR NOT NULL,
     admin BOOLEAN DEFAULT false,
     id_carrito SERIAL NOT NULL,
@@ -133,10 +131,9 @@ CREATE TABLE IF NOT EXISTS linea_carrito
 CREATE TABLE IF NOT EXISTS direccion
 (
     id SERIAL PRIMARY KEY,
-    calle INT NOT NULL,
+    calle varchar NOT NULL,
     numero BIGINT NOT NULL,
-    piso_departamento varchar(10) NOT NULL,
-    telefono VARCHAR NOT NULL,
+    piso_departamento varchar(10),
     cuil BIGINT NOT NULL,
     cp INT NOT NULL,
     
@@ -157,7 +154,7 @@ CREATE TABLE IF NOT EXISTS orden
     id SERIAL PRIMARY KEY,
     fecha INT NOT NULL,
     total NUMERIC NOT NULL,
-    codigo_cupon VARCHAR NOT NULL,
+    codigo_cupon VARCHAR,
     cuil BIGINT NOT NULL,
     id_direccion INT NOT NULL,
     
