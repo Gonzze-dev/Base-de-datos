@@ -20,3 +20,50 @@ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_eliminarCarrito AFTER DELETE ON usuario
 FOR EACH ROW EXECUTE PROCEDURE eliminarCarrito();
+
+CREATE OR REPLACE FUNCTION eliminarLineaCarrito() RETURNS TRIGGER AS
+$eliminarLineaCarrito$
+DECLARE
+    qry varchar;
+    precioLibro Tprice;
+BEGIN
+    qry := 'SELECT precio FROM libro WHERE isbn = OLD.ISBN';
+    
+    EXECUTE query INTO precioLibro;
+    
+    INSERT INTO orden_detalle (precio, cantidad, isbn, id_carrito)
+    VALUES(precioLibro, OLD.cantidad, OLD.isbn, OLD.id_carrito);
+
+    RETURN NEW;
+END;
+$eliminarLineaCarrito$ 
+LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_eliminarLineaCarrito BEFORE DELETE ON linea_carrito
+FOR EACH ROW EXECUTE PROCEDURE eliminarLineaCarrito();
+
+CREATE OR REPLACE FUNCTION actualizarId_ordenDeOrdenDetalle() RETURNS TRIGGER AS
+$actualizarId_ordenDeOrdenDetalle$
+DECLARE
+    qryPrecio varchar;
+    qryGetCuil varchar;
+    maxId intPos;
+BEGIN
+    qryPrecio := 'SELECT sum(precio)::Tprice FROM orden_detalle WHERE id_orden = null';
+    qryGetCuil :
+    EXECUTE query INTO maxId;
+    
+    INSERT INTO orden (fecha, total, cuil, id_direccion)
+    
+    UPDATE orden_detalle
+        SET id_orden = maxId
+    WHERE id_orden = NULL;
+
+    RETURN NEW;
+END;
+$actualizarId_ordenDeOrdenDetalle$ 
+LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_actualizarId_ordenDeOrdenDetalle AFTER DELETE ON linea_carrito
+FOR EACH ROW EXECUTE PROCEDURE actualizarId_ordenDeOrdenDetalle();
+
