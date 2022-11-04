@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION mailExists(correoU VARCHAR) RETURNS BOOLEAN 
+CREATE OR REPLACE FUNCTION mailExists(correoU mail) RETURNS BOOLEAN 
 AS
 $existeCorreo$
 DECLARE
@@ -11,7 +11,7 @@ END;
 $existeCorreo$ 
 LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION cuilExists(cuilU BIGINT) RETURNS BOOLEAN 
+CREATE OR REPLACE FUNCTION cuilExists(cuilU bigintPos) RETURNS BOOLEAN 
 AS
 $existeCuil$
 DECLARE
@@ -24,7 +24,7 @@ END;
 $existeCuil$ 
 LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION validPassword(correoU VARCHAR, contraseniaU VARCHAR) RETURNS BOOLEAN
+CREATE OR REPLACE FUNCTION validPassword(correoU mail, contraseniaU VARCHAR) RETURNS BOOLEAN
 AS
 $contraseniaValida$
 DECLARE
@@ -38,12 +38,12 @@ $contraseniaValida$
 LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION getUserByMail(correoU VARCHAR) 
-RETURNS TABLE (cuil BIGINT, 
-               nombre VARCHAR(60),
+RETURNS TABLE (cuil bigintPos, 
+               nombre VARCHAR(100),
                contrasenia VARCHAR,
-               correo VARCHAR,
+               correo mail,
                admin BOOLEAN,
-              id_carrito INT)
+              id_carrito intPos)
 AS
 $getUsuerByCorreo$
 BEGIN
@@ -53,10 +53,10 @@ END;
 $getUsuerByCorreo$ 
 LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION insertUser(cuilU BIGINT, 
-                                      nombreU VARCHAR(60),
+CREATE OR REPLACE FUNCTION insertUser(cuilU bigintPos, 
+                                      nombreU VARCHAR(100),
                                      contraseniaU VARCHAR,
-                                     correoU VARCHAR) RETURNS BOOLEAN
+                                     correoU mail) RETURNS BOOLEAN
 AS
 $getUsuario$
 DECLARE
@@ -79,5 +79,69 @@ BEGIN
 END;
 $getUsuario$
 LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION libroExists(isbnLibro varchar) RETURNS BOOLEAN 
+AS
+$libroExists$
+DECLARE
+    libroRegistrado BOOLEAN;
+BEGIN
+    libroRegistrado = EXISTS(SELECT isbn FROM libro WHERE isbn = isbnLibro);
+
+ RETURN libroRegistrado;
+END;
+$libroExists$ 
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION agregarLibro(isbnL VARCHAR,
+                                        url_imagenL VARCHAR,
+                                        tituloL VARCHAR,
+                                        fecha_edicionL DATE,
+                                        precioL Tprice,
+                                        stockL intPos,
+                                        descripcionL varchar,
+                                        id_editorialL intPos,
+                                        id_idiomaL intPos)
+RETURNS character varying AS
+$agregarLibro$
+DECLARE
+    qry BOOLEAN;
+    existe BOOLEAN;
+BEGIN
+
+    SELECT * INTO existe FROM libroExists(isbnL);
+    
+    IF existe THEN
+        RAISE EXCEPTION 'ERORR AL INGRESAR EL LIBRO CON ISBN %', isbnL USING HINT = ' ya existe';
+    END IF;
+    
+
+    INSERT INTO libro (isbn,
+                           url_imagen,
+                           titulo,
+                           fecha_edicion,
+                           precio,
+                           stock,
+                           descripcion,
+                           id_editorial,
+                           id_idioma)
+        VALUES (isbnL,
+                url_imagenL,
+                tituloL,
+                fecha_edicionL,
+                precioL,
+                0,
+                descripcionL,
+                id_editorialL,
+                id_idiomaL);
+        INSERT INTO compra_libro(isbn, cantidad)
+        VALUES (isbnL, 
+                stockL);
+
+    RETURN ('EL LIBRO CON ' || isbnl || ' FUE AGREGADO CON EXITO!');
+END;
+$agregarLibro$ 
+LANGUAGE plpgsql;
+
 
 
