@@ -1,0 +1,123 @@
+CREATE OR REPLACE FUNCTION crearCarrito() RETURNS TRIGGER AS
+$crearCarritoCuandoSeCreaUsuario$
+BEGIN
+        INSERT INTO carrito (fecha) VALUES (DEFAULT);
+ RETURN NEW;
+END;
+$crearCarritoCuandoSeCreaUsuario$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_crearCarrito BEFORE INSERT ON usuario
+FOR EACH ROW EXECUTE PROCEDURE crearCarrito(); 
+
+CREATE OR REPLACE FUNCTION eliminarCarrito() RETURNS TRIGGER AS
+$eliminarCarritoCuandoSeEliminaUsuario$
+BEGIN
+        DELETE FROM carrito WHERE id = OLD.id_carrito;
+ RETURN NEW;
+END;
+$eliminarCarritoCuandoSeEliminaUsuario$ 
+LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_eliminarCarrito AFTER DELETE ON usuario
+FOR EACH ROW EXECUTE PROCEDURE eliminarCarrito();
+
+CREATE OR REPLACE FUNCTION eliminarLineaCarrito() RETURNS TRIGGER AS
+$eliminarLineaCarrito$
+DECLARE
+    qry varchar;
+    precioLibro Tprice;
+BEGIN
+    qry := 'SELECT precio FROM libro WHERE isbn = OLD.ISBN';
+    
+    EXECUTE query INTO precioLibro;
+    
+    INSERT INTO orden_detalle (precio, cantidad, isbn, id_carrito)
+    VALUES(precioLibro, OLD.cantidad, OLD.isbn, OLD.id_carrito);
+
+    RETURN NEW;
+END;
+$eliminarLineaCarrito$ 
+LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_eliminarLineaCarrito BEFORE DELETE ON linea_carrito
+FOR EACH ROW EXECUTE PROCEDURE eliminarLineaCarrito();
+
+CREATE OR REPLACE FUNCTION actualizarId_ordenDeOrdenDetalle() RETURNS TRIGGER AS
+$actualizarId_ordenDeOrdenDetalle$
+DECLARE
+<<<<<<< HEAD
+    qryPrecio varchar;
+    qryGetCuil varchar;
+    maxId intPos;
+BEGIN
+    qryPrecio := 'SELECT sum(precio)::Tprice FROM orden_detalle WHERE id_orden = null';
+    qryGetCuil :
+    EXECUTE query INTO maxId;
+    
+    INSERT INTO orden (fecha, total, cuil, id_direccion)
+=======
+    qryTotalCompra varchar;
+    qryGetIdCarrito varchar;
+    qryGetCuil varchar;
+    qryGetIdDireccion varchar;
+    qryGetMaxIdOrden varchar;
+    
+    totalCompra Tprice;
+    idCarrito intPos;
+    cuilUsuario bigintPos;
+    idDireccion intPos;
+    maxId intPos;
+BEGIN
+    qryTotalCompra := 'SELECT sum(precio)::Tprice FROM orden_detalle WHERE id_orden = null';
+    qryGetIdCarrito := 'SELECT id_carrito FROM orden_detalle WHERE id = MAX(id)';
+    qryGetCuil := 'SELECT cuil FROM usuario WHERE usuario.id_carrito = idCarrito';
+    qryGetIdDireccion := 'SELECT id FROM direccion WHERE cuil = cuilUsuario';
+    qryGetMaxIdOrden := 'SELECT id FROM orden WHERE id = MAX(id)';
+    
+    EXECUTE qryTotalCompra INTO totalCompra;
+    EXECUTE qryGetIdCarrito INTO idCarrito;
+    EXECUTE qryGetCuil INTO cuilUsuario;
+    EXECUTE qryGetIdDireccion INTO idDireccion;
+    EXECUTE qryGetMaxIdOrden INTO maxId;
+    
+    INSERT INTO orden (fecha, total, cuil, id_direccion)
+    VALUES (CURRENT_DATE, totalCompra, qryGetCuil, idDireccion);
+>>>>>>> tps-en-produc-revert
+    
+    UPDATE orden_detalle
+        SET id_orden = maxId
+    WHERE id_orden = NULL;
+
+    RETURN NEW;
+END;
+$actualizarId_ordenDeOrdenDetalle$ 
+LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_actualizarId_ordenDeOrdenDetalle AFTER DELETE ON linea_carrito
+FOR EACH ROW EXECUTE PROCEDURE actualizarId_ordenDeOrdenDetalle();
+
+<<<<<<< HEAD
+=======
+CREATE OR REPLACE FUNCTION actualizarStockLibro() RETURNS TRIGGER AS
+$actualizarStockLibro$
+DECLARE
+    stockLibro intPos;
+    nuevaCantidad intPos;
+BEGIN
+    SELECT stock INTO stockLibro FROM libro WHERE isbn = NEW.isbn;
+    
+    nuevaCantidad := stockLibro + NEW.cantidad;
+    
+    UPDATE libro
+        SET stock = nuevaCantidad
+    WHERE isbn = NEW.isbn;
+    
+    RETURN NEW;
+END;
+$actualizarStockLibro$ LANGUAGE plpgsql;
+
+DROP TRIGGER trigger_actualizarStockLibro on compra_libro;
+
+CREATE TRIGGER trigger_actualizarStockLibro AFTER INSERT ON compra_libro
+FOR EACH ROW EXECUTE PROCEDURE actualizarStockLibro(); 
+>>>>>>> tps-en-produc-revert

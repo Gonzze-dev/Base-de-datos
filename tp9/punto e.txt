@@ -1,0 +1,17 @@
+CREATE OR REPLACE FUNCTION partidosXPorcXVotos(int)
+RETURNS TABLE (nroP smallint, nombreP varchar(255), porcvotos numeric)  AS
+$partidosConXPorcentajeDeVotos$
+BEGIN
+    RETURN QUERY
+    SELECT * FROM (SELECT partido.nrop, partido.nombrep, 
+    ((sum(votosmesapartido.votospartido)*100.00) / a.votosTotal) AS porcVotos
+    FROM (SELECT sum(a.votospartido) AS votosTotal FROM partido
+        JOIN votosmesapartido as a ON partido.nrop = a.nropartido) as a, 
+                   partido
+    INNER JOIN votosmesapartido ON partido.nrop = votosmesapartido.nropartido
+    GROUP BY partido.nrop, partido.nombrep, a.votosTotal) as a
+    WHERE a.porcvotos >= $1;
+    
+END;
+$partidosConXPorcentajeDeVotos$
+language plpgsql

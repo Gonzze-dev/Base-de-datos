@@ -1,0 +1,9 @@
+/*
+-- Aquellos ejemplares que jamás hayan sido retirados.
+SELECT * FROM ejemplar
+INNER JOIN libro ON ejemplar.isbn = libro.isbn
+INNER JOIN prestamo ON prestamo.idinventario != ejemplar.idinventario
+
+*/
+
+

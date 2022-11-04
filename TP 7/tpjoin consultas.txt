@@ -1,0 +1,112 @@
+punto 1
+select pc.*, 
+    cpu.fabricante AS cpuFabricante,
+    cpu.tipo AS cpuTipo,
+    memoria.capacidad AS memoriaCapacidad,
+    memoria.tipo AS memoriaTipo,
+    disco.capacidad AS discoCapacidad,
+    disco.fabricante AS discoFabricante,
+    tgrafica.fabricante AS tgraficaFabricante
+from pc
+LEFT JOIN cpu ON cpu.id_cpu = pc.cpu
+LEFT JOIN memoria ON memoria.id_mem = pc.cpu
+LEFT JOIN tgrafica ON tgrafica.id_tgraf = pc.tgrafica
+LEFT JOIN disco ON disco.id_disco = pc.disco
+WHERE (pc.precio is not null) 
+    and (pc.cpu is not null) 
+    and (pc.memoria is not null)
+    and (pc.tgrafica is not null)
+    and (pc.disco is not null)
+ORDER BY pc.precio desc
+
+punto 2
+select pc.*, 
+    cpu.fabricante AS cpuFabricante,
+    cpu.tipo AS cpuTipo,
+    memoria.capacidad AS memoriaCapacidad,
+    memoria.tipo AS memoriaTipo,
+    disco.capacidad AS discoCapacidad,
+    disco.fabricante AS discoFabricante,
+    tgrafica.fabricante AS tgraficaFabricante
+from pc
+LEFT JOIN cpu ON cpu.id_cpu = pc.cpu
+LEFT JOIN memoria ON memoria.id_mem = pc.cpu
+LEFT JOIN tgrafica ON tgrafica.id_tgraf = pc.tgrafica
+LEFT JOIN disco ON disco.id_disco = pc.disco
+WHERE pc.precio is not null
+ORDER BY pc.precio desc
+
+punto 3
+select *
+from pc
+LEFT JOIN cpu ON cpu.id_cpu = pc.cpu
+LEFT JOIN memoria ON memoria.id_mem = pc.cpu
+LEFT JOIN tgrafica ON tgrafica.id_tgraf = pc.tgrafica
+LEFT JOIN disco ON disco.id_disco = pc.disco
+WHERE (pc.precio is not null) 
+    and ((pc.cpu is null) 
+    or (pc.memoria is null)
+    or (pc.tgrafica is null)
+    or (pc.disco is null))
+
+punto 4
+select *
+from pc
+LEFT JOIN cpu ON cpu.id_cpu = pc.cpu
+LEFT JOIN disco ON disco.id_disco = pc.disco
+WHERE cpu.fabricante = 'amd'
+    and disco.fabricante = 'samsung';
+
+punto 5
+select count(pc.*)
+from pc
+LEFT JOIN cpu ON cpu.id_cpu = pc.cpu
+WHERE cpu.fabricante = 'amd'
+    or cpu.fabricante = 'intel';
+
+punto 6
+punto a
+CREATE VIEW getPcCompletosYQueEstanEnVentasConInfoDeComponentes
+AS
+(
+    select pc.*, 
+    cpu.fabricante AS cpuFabricante,
+    cpu.tipo AS cpuTipo,
+    memoria.capacidad AS memoriaCapacidad,
+    memoria.tipo AS memoriaTipo,
+    disco.capacidad AS discoCapacidad,
+    disco.fabricante AS discoFabricante,
+    tgrafica.fabricante AS tgraficaFabricante
+    from pc
+    LEFT JOIN cpu ON cpu.id_cpu = pc.cpu
+    LEFT JOIN memoria ON memoria.id_mem = pc.cpu
+    LEFT JOIN tgrafica ON tgrafica.id_tgraf = pc.tgrafica
+    LEFT JOIN disco ON disco.id_disco = pc.disco
+    WHERE (pc.precio is not null) 
+        and (pc.cpu is not null) 
+        and (pc.memoria is not null)
+        and (pc.tgrafica is not null)
+        and (pc.disco is not null)
+    ORDER BY pc.precio desc
+);
+
+punto b
+CREATE VIEW getPcQueEstanEnVentasConInfoDeComponentes
+AS
+(
+    select pc.*, 
+    cpu.fabricante AS cpuFabricante,
+    cpu.tipo AS cpuTipo,
+    memoria.capacidad AS memoriaCapacidad,
+    memoria.tipo AS memoriaTipo,
+    disco.capacidad AS discoCapacidad,
+    disco.fabricante AS discoFabricante,
+    tgrafica.fabricante AS tgraficaFabricante
+    from pc
+    LEFT JOIN cpu ON cpu.id_cpu = pc.cpu
+    LEFT JOIN memoria ON memoria.id_mem = pc.cpu
+    LEFT JOIN tgrafica ON tgrafica.id_tgraf = pc.tgrafica
+    LEFT JOIN disco ON disco.id_disco = pc.disco
+    WHERE pc.precio is not null
+    ORDER BY pc.precio desc
+);

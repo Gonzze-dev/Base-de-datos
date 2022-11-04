@@ -1,0 +1,226 @@
+A)
+SELECT ROUND((b.cantMesas * 100) / a.cantTotalMesas)
+FROM (SELECT COUNT(mesa.nromesa) AS cantTotalMesas from mesa) AS a,
+    (SELECT COUNT(votosxmesa.nromesa) AS cantMesas from votosxmesa) AS b
+
+B)
+SELECT escuela.nombreescuela, votosxmesatotal.idesc, SUM(votosxmesatotal.votos)
+FROM
+    (
+        SELECT a.idesc AS idesc, (b.blancos + b.nulos + b.recurridos + b.impugnados) AS votos
+        FROM mesa AS a
+        LEFT JOIN votosxmesa AS b ON a.nromesa = b.nromesa
+     ) AS votosxmesatotal
+LEFT JOIN escuela ON escuela.idesc = votosxmesatotal.idesc
+GROUP BY escuela.nombreescuela, votosxmesatotal.idesc
+ORDER BY votosxmesatotal.idesc
+
+C) 
+SELECT circuito.idcircuito, circuito.nombrecirc, SUM(votosxescuela.votos)
+FROM (
+SELECT escuela.nombreescuela, votosxmesatotal.idesc, escuela.idcircuito, SUM(votosxmesatotal.votos) AS votos
+FROM
+    (
+        SELECT a.idesc AS idesc,  (b.blancos + b.nulos + b.recurridos + b.impugnados) AS votos
+        FROM mesa AS a
+        LEFT JOIN votosxmesa AS b ON a.nromesa = b.nromesa
+     ) AS votosxmesatotal
+LEFT JOIN escuela ON escuela.idesc = votosxmesatotal.idesc
+GROUP BY escuela.nombreescuela, votosxmesatotal.idesc, escuela.idcircuito
+ORDER BY votosxmesatotal.idesc
+) AS votosxescuela
+LEFT JOIN circuito ON circuito.idcircuito = votosxescuela.idcircuito
+GROUP BY circuito.idcircuito, circuito.nombrecirc
+ORDER BY circuito.idcircuito
+
+D) 
+SELECT ((votospartido.votosxpartido*100.00)/votostotal.votostotales)
+FROM (
+    SELECT e.nrop, e.nombrep, SUM(a.votospartido) as votosxpartido
+    FROM votosmesapartido AS a
+    LEFT JOIN mesa AS b ON b.nromesa = b.nromesa
+    LEFT JOIN escuela AS c ON c.idesc = b.idesc
+    LEFT JOIN circuito AS d ON d.idcircuito = c.idcircuito
+    LEFT JOIN partido AS e ON e.nrop = a.nropartido
+    WHERE d.nombrecirc LIKE 'SUBURBIO NORTE' AND e.nombrep LIKE 'PRO'
+    GROUP BY e.nrop, e.nombrep
+) AS votospartido,
+(
+    SELECT SUM(a.votospartido) as votostotales
+    FROM votosmesapartido AS a
+    LEFT JOIN mesa AS b ON b.nromesa = b.nromesa
+    LEFT JOIN escuela AS c ON c.idesc = b.idesc
+    LEFT JOIN circuito AS d ON d.idcircuito = c.idcircuito
+    LEFT JOIN partido AS e ON e.nrop = a.nropartido
+    WHERE d.nombrecirc LIKE 'SUBURBIO NORTE'
+    GROUP BY d.nombrecirc LIKE 'SUBURBIO NORTE'
+) AS votostotal
+
+E)
+SELECT e.nrop, e.nombrep, c.nombreescuela, SUM(a.votospartido) as votosxpartido
+FROM votosmesapartido AS a
+LEFT JOIN mesa AS b ON b.nromesa = b.nromesa
+LEFT JOIN escuela AS c ON c.idesc = b.idesc
+LEFT JOIN partido AS e ON e.nrop = a.nropartido
+WHERE c.nombreescuela = '92 TUCUMAN' AND e.nombrep LIKE 'MST'
+GROUP BY e.nrop, e.nombrep, c.nombreescuela
+
+F)
+SELECT SUM(votospartido) AS votosvalidos
+FROM votosmesapartido
+
+G)
+SELECT ROUND((votosInvalidos*100.00)/(votosValidos + votosInvalidos)) AS porscVotosInvalidos
+FROM (select SUM(votospartido) AS votosValidos from votosmesapartido) AS a,
+    (select (SUM(blancos) + SUM(nulos) + SUM(recurridos) + SUM(impugnados)) AS votosInvalidos
+    from votosxmesa) AS b
+
+H)
+SELECT nroPartido, ROUND(SUM(votospartido.votospartido) * 100.00 / (a.votosValidos + b.votosInvalidos))
+FROM (select SUM(votospartido) AS votosValidos from votosmesapartido) AS a,
+    (select (SUM(blancos) + SUM(nulos) + SUM(recurridos) + SUM(impugnados)) AS votosInvalidos
+    from votosxmesa) AS b, votosmesapartido as votospartido
+ GROUP BY nroPartido, a.votosValidos, b.votosInvalidos
+
+I)
+SELECT nroPartido, ROUND(SUM(votospartido.votospartido) * 100.00 / a.votosValidos)
+FROM (select SUM(votospartido) AS votosValidos from votosmesapartido) AS a, 
+     votosmesapartido as votospartido
+ GROUP BY nroPartido, a.votosValidos
+ ORDER BY nroPartido
+
+J)
+SELECT nroPartido, (sum(votospartido.votospartido) + sum(a.blancos) + sum(a.impugnados) + sum(a.nulos) + sum(a.recurridos)) AS votosTotalesPorLista
+FROM votosmesapartido as votospartido
+INNER JOIN votosxmesa as a ON a.nroMesa = votospartido.nromesa
+GROUP BY nroPartido
+
+K)
+SELECT b.idCircuitoG, b.nroPartidoG, b.votos
+FROM
+    (
+        SELECT DISTINCT idcircuitoG, MAX(votosTotal) as votos
+        FROM
+            (
+                SELECT mesa.nroMesa AS nroMesaG, circuito.idcircuito AS idcircuitoG, 
+                votosmesapartido.nropartido AS nroPartidoG, SUM(votosPartido) AS votosTotal from mesa
+                LEFT JOIN escuela ON escuela.idesc = mesa.idesc
+                LEFT JOIN votosmesapartido ON votosmesapartido.nromesa = mesa.nromesa
+                LEFT JOIN circuito ON circuito.idcircuito = escuela.idcircuito
+                GROUP BY mesa.nromesa, circuito.idcircuito, votosmesapartido.nropartido
+                ORDER BY mesa.nroMesa
+            ) AS a
+        GROUP BY idcircuitoG
+    ) AS a
+INNER JOIN 
+(
+    SELECT nroPartidoG, idcircuitoG, MAX(votosTotal) as votos
+    FROM
+        (
+            SELECT mesa.nroMesa AS nroMesaG, circuito.idcircuito AS idcircuitoG, 
+            votosmesapartido.nropartido AS nroPartidoG, SUM(votosPartido) AS votosTotal from mesa
+            LEFT JOIN escuela ON escuela.idesc = mesa.idesc
+            LEFT JOIN votosmesapartido ON votosmesapartido.nromesa = mesa.nromesa
+            LEFT JOIN circuito ON circuito.idcircuito = escuela.idcircuito
+            GROUP BY mesa.nromesa, circuito.idcircuito, votosmesapartido.nropartido
+            ORDER BY mesa.nroMesa
+        ) AS a
+     GROUP BY nroPartidoG, idcircuitoG
+     ORDER BY idcircuitoG, votos DESC
+) AS b ON a.votos = b.votos
+ORDER BY idcircuitoG
+
+l)
+CREATE OR REPLACE FUNCTION primerosCuatroPorEscuela(int)
+RETURNS TABLE (idescG int, nroPartidoG smallint, votosTotal bigint) 
+language plpgsql
+AS
+$$
+BEGIN
+    RETURN QUERY
+    SELECT  escuela.idesc, 
+            votosmesapartido.nropartido, 
+            SUM(votosPartido) from mesa
+    JOIN escuela ON escuela.idesc = mesa.idesc
+    JOIN votosmesapartido ON votosmesapartido.nromesa = mesa.nromesa
+    WHERE (votosmesapartido.nropartido IS NOT NULL)
+            AND (escuela.idesc=$1)
+    GROUP BY escuela.idesc, votosmesapartido.nropartido
+    order by escuela.idesc asc, SUM desc
+    limit 4;
+END;
+$$
+
+select * from primerosCuatroPorEscuela(1)
+
+m) 
+SELECT(a.votostotal - b.votostotal) AS diferenciaVotos, 
+        (a.votostotal*100/(b.votostotal + a.votostotal)) - (b.votostotal*100/(b.votostotal + a.votostotal)) AS diferenciaPorcVotos
+FROM primerosCuatroPorEscuela(1) AS a CROSS JOIN
+     primerosCuatroPorEscuela(1) AS b
+WHERE a.votostotal = 970 and b.votostotal = 836
+
+n)
+select partido.nrop, partido.nombrep, a.votosTotal from primerosCuatroPorEscuela(1) AS a
+INNER JOIN partido ON partido.nrop = a.nropartidog
+LIMIT 1
+
+o) SELECT partido.nrop, a.idcircuitog, partido.nombrep, a.votos FROM(
+    SELECT b.idCircuitoG, b.nroPartidoG, b.votos
+    FROM
+        (
+            SELECT DISTINCT idcircuitoG, MAX(votosTotal) as votos
+            FROM
+                (
+                    SELECT mesa.nroMesa AS nroMesaG, circuito.idcircuito AS idcircuitoG, 
+                    votosmesapartido.nropartido AS nroPartidoG, SUM(votosPartido) AS votosTotal from mesa
+                    LEFT JOIN escuela ON escuela.idesc = mesa.idesc
+                    LEFT JOIN votosmesapartido ON votosmesapartido.nromesa = mesa.nromesa
+                    LEFT JOIN circuito ON circuito.idcircuito = escuela.idcircuito
+                    GROUP BY mesa.nromesa, circuito.idcircuito, votosmesapartido.nropartido
+                    ORDER BY mesa.nroMesa
+                ) AS a
+            GROUP BY idcircuitoG
+        ) AS a
+    INNER JOIN 
+    (
+        SELECT nroPartidoG, idcircuitoG, MAX(votosTotal) as votos
+        FROM
+            (
+                SELECT mesa.nroMesa AS nroMesaG, circuito.idcircuito AS idcircuitoG, 
+                votosmesapartido.nropartido AS nroPartidoG, SUM(votosPartido) AS votosTotal from mesa
+                LEFT JOIN escuela ON escuela.idesc = mesa.idesc
+                LEFT JOIN votosmesapartido ON votosmesapartido.nromesa = mesa.nromesa
+                LEFT JOIN circuito ON circuito.idcircuito = escuela.idcircuito
+                GROUP BY mesa.nromesa, circuito.idcircuito, votosmesapartido.nropartido
+                ORDER BY mesa.nroMesa
+            ) AS a
+         GROUP BY nroPartidoG, idcircuitoG
+         ORDER BY idcircuitoG, votos DESC
+    ) AS b ON a.votos = b.votos
+    ORDER BY idcircuitoG
+) as a
+INNER JOIN partido ON partido.nrop = a.nropartidog
+
+p)
+
+CREATE OR REPLACE FUNCTION getVotosTotal()
+RETURNS bigint AS
+$$
+DECLARE
+    total bigint;
+BEGIN
+    SELECT sum(a.votospartido) INTO total FROM partido
+    JOIN votosmesapartido as a ON partido.nrop = a.nropartido;
+    
+    return total;
+END;
+$$
+language plpgsql
+
+SELECT * FROM (SELECT partido.nrop, partido.nombrep, 
+    ((sum(votosmesapartido.votospartido)*100.00) / getVotosTotal) AS porcVotos
+FROM (select getVotosTotal()) as a, partido
+INNER JOIN votosmesapartido ON partido.nrop = votosmesapartido.nropartido
+GROUP BY partido.nrop, partido.nombrep, getVotosTotal) as a
+WHERE a.porcvotos >= 5

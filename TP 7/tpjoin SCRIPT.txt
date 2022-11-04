@@ -1,0 +1,82 @@
+CREATE TABLE public.cpu
+(
+id_cpu character varying(15) COLLATE pg_catalog."default" NOT NULL,
+fabricante character varying(15) COLLATE pg_catalog."default" NOT NULL,
+tipo character varying(15) COLLATE pg_catalog."default" NOT NULL,
+CONSTRAINT cpu_pkey PRIMARY KEY (id_cpu)
+);
+
+INSERT INTO public.cpu(id_cpu, fabricante, tipo) VALUES('cpu0001', 'intel',
+'Core 2duo');
+INSERT INTO public.cpu(id_cpu, fabricante, tipo) VALUES('cpu0002', 'intel',
+'Core 2Quad');
+INSERT INTO public.cpu(id_cpu, fabricante, tipo) VALUES('cpu0003', 'amd',
+'Athlon x2');
+
+CREATE TABLE public.disco
+(
+id_disco character varying(10) COLLATE pg_catalog."default" NOT NULL,
+fabricante character varying(15) COLLATE pg_catalog."default" NOT NULL,
+capacidad integer NOT NULL,
+CONSTRAINT disco_pkey PRIMARY KEY (id_disco)
+);
+
+INSERT INTO public.disco(id_disco, fabricante, capacidad)
+VALUES('disco0001', 'seagate', 360);
+INSERT INTO public.disco(id_disco, fabricante, capacidad)
+VALUES('disco0002', 'seagate', 500);
+INSERT INTO public.disco(id_disco, fabricante, capacidad)
+VALUES('disco0003', 'seagate', 1024);
+INSERT INTO public.disco(id_disco, fabricante, capacidad)
+VALUES('disco0004', 'samsung', 500);
+CREATE TABLE public.memoria
+(
+id_mem character varying(10) COLLATE pg_catalog."default" NOT NULL,
+capacidad integer NOT NULL,
+tipo character varying(15) COLLATE pg_catalog."default" NOT NULL,
+CONSTRAINT memoria_pkey PRIMARY KEY (id_mem)
+);
+
+INSERT INTO public.memoria(id_mem, capacidad, tipo) VALUES('mem0001', 1024,
+'DDR SDRAM');
+INSERT INTO public.memoria(id_mem, capacidad, tipo) VALUES('mem0002', 1024,
+'DDR2 SDRAM');
+INSERT INTO public.memoria(id_mem, capacidad, tipo) VALUES('mem0003', 1024,
+'DDR3 SDRAM');
+INSERT INTO public.memoria(id_mem, capacidad, tipo) VALUES('mem0004', 1024,
+'DDR3 SDRAM');
+
+CREATE TABLE public.tgrafica
+(
+id_tgraf character varying(10) COLLATE pg_catalog."default" NOT NULL,
+fabricante character varying(15) COLLATE pg_catalog."default" NOT NULL,
+CONSTRAINT tgrafica_pkey PRIMARY KEY (id_tgraf)
+);
+
+INSERT INTO public.tgrafica(id_tgraf, fabricante) VALUES('ati0001', 'ati');
+INSERT INTO public.tgrafica(id_tgraf, fabricante) VALUES('nvidia0001',
+'nvidia');
+--DROP TABLE public.pc;
+CREATE TABLE public.pc
+(
+id_pc integer NOT NULL,
+memoria character varying(15),
+cpu character varying(15),
+disco character varying(15),
+tgrafica character varying(15) NOT NULL,
+precio integer NOT NULL,
+CONSTRAINT pc_pkey PRIMARY KEY (id_pc)
+);
+
+INSERT INTO public.pc(id_pc,memoria, cpu, disco, tgrafica, precio) VALUES(1,
+'mem0001', 'cpu0001', 'disco0001', 'ati0001', 1000);
+INSERT INTO public.pc(id_pc,memoria, cpu, disco, tgrafica, precio) VALUES(2,
+'mem0001', 'cpu0001', 'disco0002', 'ati0001', 1100);
+INSERT INTO public.pc(id_pc,memoria, cpu, disco, tgrafica, precio) VALUES(3,
+'mem0002', 'cpu0002', 'disco0003', 'nvidia0001', 1400);
+INSERT INTO public.pc(id_pc,memoria, cpu, disco, tgrafica, precio) VALUES(4,
+'mem0004', 'cpu0003', 'disco0004', 'nvidia0001', 1600);
+INSERT INTO public.pc(id_pc,memoria, cpu, disco, tgrafica, precio) VALUES(5,
+NULL, 'cpu0001', 'disco0001', 'ati0001', 900);
+INSERT INTO public.pc(id_pc,memoria, cpu, disco, tgrafica, precio) VALUES(6,
+NULL, NULL, NULL, 'ati0001', 400);

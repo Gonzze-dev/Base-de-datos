@@ -1,0 +1,168 @@
+CREATE OR REPLACE FUNCTION eliminarLineaCarrito() RETURNS TRIGGER AS
+$eliminarLineaCarrito$
+DECLARE
+    qry varchar;
+    precioLibro Tprice;
+BEGIN
+    qry := 'SELECT precio FROM libro WHERE isbn = OLD.ISBN';
+    
+    EXECUTE query INTO precioLibro;
+    
+    INSERT INTO orden_detalle (precio, cantidad, isbn)
+    VALUES(precioLibro, OLD.cantidad, OLD.isbn);
+
+    RETURN NEW;
+END;
+$eliminarLineaCarrito$ 
+LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_eliminarLineaCarrito BEFORE DELETE ON linea_carrito
+FOR EACH ROW EXECUTE PROCEDURE eliminarLineaCarrito();
+
+<<<<<<< HEAD
+CREATE OR REPLACE FUNCTION actualizarId_ordenDeOrdenDetalle() RETURNS TRIGGER AS
+$actualizarId_ordenDeOrdenDetalle$
+DECLARE
+    qryPrecio varchar;
+    maxId intPos;
+BEGIN
+    qryPrecio := 'SELECT sum(precio)::Tprice FROM orden_detalle WHERE id_orden = null';
+    EXECUTE query INTO maxId;
+=======
+CREATE TABLE IF NOT EXISTS tema
+(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS editorial
+(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS libro
+(
+    isbn VARCHAR PRIMARY KEY NOT NULL,
+    url_imagen VARCHAR NOT NULL,
+    titulo VARCHAR NOT NULL,
+    fecha_edicion DATE NOT NULL,
+    precio Tprice NOT NULL,
+    stock intPos NOT NULL,
+    descripcion VARCHAR NOT NULL,
+    fecha_ingreso DATE NOT NULL DEFAULT CURRENT_DATE,
+    id_editorial intPos NOT NULL,
+    id_idioma intPos NOT NULL,
+>>>>>>> tps-en-produc-revert
+    
+    INSERT INTO orden (fecha, total, cuil, id_direccion)
+    
+    UPDATE orden_detalle
+        SET id_orden = maxId
+    WHERE id_orden = NULL;
+
+    RETURN NEW;
+END;
+$actualizarId_ordenDeOrdenDetalle$ 
+LANGUAGE plpgsql;
+
+<<<<<<< HEAD
+CREATE TRIGGER trigger_actualizarId_ordenDeOrdenDetalle AFTER DELETE ON linea_carrito
+FOR EACH ROW EXECUTE PROCEDURE actualizarId_ordenDeOrdenDetalle();
+=======
+CREATE TABLE IF NOT EXISTS escrito_por
+(
+    isbn varchar NOT NULL,
+    id_autor intPos NOT NULL,
+    
+    CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
+    CONSTRAINT FK_id_autor FOREIGN KEY (id_autor) REFERENCES autor(id)
+);
+
+CREATE TABLE IF NOT EXISTS carrito
+(
+    id SERIAL PRIMARY KEY,
+    fecha DATE NOT NULL DEFAULT CURRENT_DATE
+);
+
+CREATE TABLE IF NOT EXISTS usuario
+(
+    cuil bigintPos NOT NULL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    contrasenia VARCHAR NOT NULL,
+    correo mail NOT NULL,
+    telefono varchar NOT NULL,
+    admin BOOLEAN DEFAULT false,
+    id_carrito SERIAL NOT NULL,
+    
+    CONSTRAINT FK_id_carrito FOREIGN KEY (id_carrito) REFERENCES carrito(id)
+);
+
+CREATE TABLE IF NOT EXISTS favorito
+(
+    cuil bigintPos NOT NULL,
+    isbn varchar NOT NULL,
+
+    CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil),
+    CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn)
+);
+
+CREATE TABLE IF NOT EXISTS linea_carrito
+(
+    nro_linea SERIAL PRIMARY KEY,
+    cantidad smallintPos NOT NULL,
+    isbn varchar NOT NULL,
+    id_carrito intPos NOT NULL,
+    
+    CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
+    CONSTRAINT FK_id_carrito FOREIGN KEY (id_carrito) REFERENCES carrito(id)
+);
+
+CREATE TABLE IF NOT EXISTS direccion
+(
+    id SERIAL PRIMARY KEY,
+    calle varchar NOT NULL,
+    numero smallintPos NOT NULL,
+    piso_departamento varchar(10),
+    cuil bigintPos NOT NULL,
+    cp smallintPos NOT NULL,
+    
+    CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil),
+    CONSTRAINT FK_cp FOREIGN KEY (cp) REFERENCES ciudad(cp)
+);
+
+
+CREATE TABLE IF NOT EXISTS cupon
+(
+    codigo VARCHAR PRIMARY KEY,
+    porc_descuento porcentage NOT NULL,
+    usado BOOLEAN NOT NULL DEFAULT false
+);
+
+CREATE TABLE IF NOT EXISTS orden
+(
+    id SERIAL PRIMARY KEY,
+    fecha date NOT NULL,
+    total Tprice NOT NULL,
+    codigo_cupon VARCHAR,
+    cuil bigintPos NOT NULL,
+    id_direccion intPos NOT NULL,
+    
+    CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil),
+    CONSTRAINT FK_id_direccion FOREIGN KEY (id_direccion) REFERENCES direccion(id)
+);
+
+CREATE TABLE IF NOT EXISTS orden_detalle
+(
+    id SERIAL PRIMARY KEY,
+    precio Tprice NOT NULL,
+    cantidad intPos NOT NULL,
+    id_orden intPos DEFAULT(NULL),
+    isbn varchar NOT NULL,
+    id_carrito intPos NOT NULL,
+
+    CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
+    CONSTRAINT FK_orden FOREIGN KEY (id_orden) REFERENCES orden(id),
+    CONSTRAINT FK_id_carrito FOREIGN KEY (id_carrito) REFERENCES carrito(id)
+);
+>>>>>>> tps-en-produc-revert

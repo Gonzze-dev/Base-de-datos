@@ -1,0 +1,53 @@
+-- -- a)
+-- CREATE USER user1 WITH PASSWORD '111';
+-- CREATE USER user2 WITH PASSWORD '222';
+
+-- -- b)
+-- CREATE TABLE IF NOT EXISTS tabla1
+-- (
+--     nrodpto SERIAL PRIMARY KEY,
+--     nombdpto VARCHAR(20) UNIQUE NOT NULL
+-- );
+
+-- CREATE TABLE IF NOT EXISTS tabla2
+-- (
+--     id SERIAL PRIMARY KEY,
+--     nombre VARCHAR(30) NOT NULL,
+--     apellido VARCHAR(30) NOT NULL,
+--     sueldo NUMERIC(9,2),
+--     nrodpto INTEGER NOT NULL,
+    
+--     CONSTRAINT FK_nrodpto FOREIGN KEY (nrodpto) REFERENCES tabla1(nrodpto) 
+--     ON UPDATE CASCADE
+--     ON DELETE RESTRICT
+-- );
+
+-- -- c)
+-- GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA PUBLIC TO postgres;
+-- GRANT INSERT, SELECT ON tabla1 TO user1
+-- GRANT ALL ON tabla2 TO user2
+
+-- -- d)
+-- INSERT INTO tabla1 (nombdpto) VALUES 
+-- ('SANTA CLASA 914'), 
+-- ('CONGRESO TUCUMAN 19'), 
+-- ('CEPEDA 125');
+
+-- INSERT INTO tabla2 (nombre, apellido, sueldo, nrodpto) VALUES 
+-- ('Gonzalo', 'Errandonea', 1534.241, 1), 
+-- ('Tomas', 'Alaluf', 1, 1), 
+-- ('Alex', 'Brunetti', 9999.241, 3);
+
+-- -- e)
+-- UPDATE tabla1 SET nrodpto = 5 WHERE nrodpto = 1
+-- -- Al hacer el update, actualizo el nrodpto 1 a 5, y como la tabla2 tenia el update on cascade, cualquier cambio se que
+-- -- produzca en alguna de las cables primarias, como se realizo en este punto, tambien se realizara un cambio el las fk nrodpto de la t
+tabla2
+ 
+-- DELETE FROM tabla1 WHERE nrodpto = 5
+-- -- al hacer un delete nos suelta el siguiente mensaje
+-- -- ERROR:  update o delete en «tabla1» viola la llave foránea «fk_nrodpto» en la tabla «tabla2»
+-- -- Esto porque no se puede borrar una clave primaria a la que se le esta haciendo referencia, 
+-- -- como es el caso de que tabla2 hace referencia con nrodpto a nrodpto de la tabla1
+
+
