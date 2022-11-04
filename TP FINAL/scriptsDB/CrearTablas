@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS editorial
 CREATE TABLE IF NOT EXISTS libro
 (
     isbn VARCHAR PRIMARY KEY NOT NULL,
-    imagen VARCHAR NOT NULL,
+    url_imagen VARCHAR NOT NULL,
     titulo VARCHAR NOT NULL,
     fecha_edicion DATE NOT NULL,
     precio Tprice NOT NULL,
@@ -114,6 +114,7 @@ CREATE TABLE IF NOT EXISTS favorito
 (
     cuil bigintPos NOT NULL,
     isbn varchar NOT NULL,
+
     CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil),
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn)
 );
@@ -168,9 +169,11 @@ CREATE TABLE IF NOT EXISTS orden_detalle
     id SERIAL PRIMARY KEY,
     precio Tprice NOT NULL,
     cantidad intPos NOT NULL,
-    id_orden intPos NOT NULL,
+    id_orden intPos DEFAULT(NULL),
     isbn varchar NOT NULL,
-    
+    id_carrito intPos NOT NULL,
+
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
-    CONSTRAINT FK_orden FOREIGN KEY (id_orden) REFERENCES orden(id)
+    CONSTRAINT FK_orden FOREIGN KEY (id_orden) REFERENCES orden(id),
+    CONSTRAINT FK_id_carrito FOREIGN KEY (id_carrito) REFERENCES carrito(id)
 );
