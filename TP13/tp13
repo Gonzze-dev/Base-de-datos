@@ -6,12 +6,97 @@ INNER JOIN prestamo ON prestamo.idinventario != ejemplar.idinventario
 
 --Los libros pertenecientes a la categoría Marketing para los que haya habido pedidos
 --insatisfechos.
-
 SELECT * FROM Libro
 LEFT JOIN categorialibro ON categorialibro.isbn = libro.isbn
 LEFT JOIN categoria ON categoria.idcategoria = categorialibro.idcategoria
 LEFT JOIN pedidoinsatisfecho ON pedidoinsatisfecho.isbn = Libro.isbn
 WHERE categoria.categoria = 'Marketing'
+
+
+--Los alumnos de Concepción del Uruguay que hayan retirado al menos dos libros durante los
+--años 1988 al 1991.
+SELECT * FROM alumno
+LEFT JOIN usuario ON usuario.dni = alumno.dni
+LEFT JOIN localidad ON localidad.idlocalidad = usuario.idlocalidad
+LEFT JOIN prestamo ON prestamo.dni = usuario.dni
+WHERE localidad.localidad LIKE 'CONCEPCION DEL URUGUAY'
+    AND (extract(year from prestamo.fechaprestamo) BETWEEN 1988 AND 1991);
+
+--Listar los departamentos de los cuales dependen todos aquellos investigadores que hayan
+--retirado libros editados por 'Sudamericana'.
+
+SELECT * FROM investigador
+LEFT JOIN prestamo ON prestamo.dni = investigador.dni
+LEFT JOIN ejemplar ON ejemplar.idinventario = prestamo.idinventario
+LEFT JOIN libro ON libro.isbn = ejemplar.isbn
+LEFT JOIN editorial ON editorial.editorial = libro.editorial
+LEFT JOIN participa ON participa.dni = investigador.dni
+LEFT JOIN proyecto ON proyecto.idproyecto = participa.idproyecto
+LEFT JOIN departamento ON departamento.iddepartamento = proyecto.idproyecto
+WHERE editorial.editorial LIKE 'Sudamericana'
+
+--El título de aquellos libros que hayan sido retirados tanto por docentes que dictan una
+--determinada materia como por alumnos que cursan la misma.
+
+SELECT libro.titulo FROM usuario
+LEFT JOIN docente ON docente.dni = usuario.dni
+LEFT JOIN alumno ON alumno.dni = usuario.dni
+LEFT JOIN dicta ON dicta.dni = docente.dni
+LEFT JOIN materia ON materia.idmateria = dicta.idmateria
+LEFT JOIN prestamo ON prestamo.dni = usuario.dni
+LEFT JOIN ejemplar ON ejemplar.idinventario = prestamo.idinventario
+LEFT JOIN libro ON libro.isbn = ejemplar.isbn
+LEFT JOIN cursa ON cursa.dni = alumno.dni
+WHERE ((alumno.dni = cursa.dni AND docente.dni = dicta.dni)
+    AND (materia.idmateria = 11))
+    AND libro.titulo != ''
+
+--El nombre de los usuarios a los que se les ha vencido el plazo para devolver algún libro, y que
+--2con posterioridad a la fecha de vencimiento hayan retirado algún otro.
+
+SELECT prestamosVencidos.dni FROM
+    (SELECT usuario.dni FROM usuario
+    LEFT JOIN prestamo ON prestamo.dni = usuario.dni
+    WHERE prestamo.fechalimite < prestamo.fechadevolucion)
+    AS prestamosVencidos
+    LEFT JOIN prestamo ON prestamo.dni = prestamosVencidos.dni
+    WHERE prestamo.fechalimite >= prestamo.fechadevolucion
+    GROUP BY prestamosVencidos.dni
+    LIMIT 2
+
+--Los docentes que dictan alguna materia en todas las carreras a las que dicha materia pertenece.
+SELECT carrerasEnseniadas.dni FROM 
+    (SELECT docente.dni, count(docente.dni) as cCarreras FROM docente
+    LEFT JOIN dicta ON dicta.dni = docente.dni
+    LEFT JOIN carrera ON carrera.idcarrera = dicta.idcarrera
+    GROUP BY docente.dni) AS carrerasEnseniadas, carrera
+    GROUP BY carrerasEnseniadas.dni, carrerasEnseniadas.cCarreras
+    HAVING carrerasEnseniadas.cCarreras = max(carrera.idcarrera)
+
+--Aquellos libros para los que existe más de un ejemplar, tal que al menos dos de esos
+--ejemplares se hayan encontrado prestados en forma simultánea en un determinado momento.
+--Para simplificar, considerar solamente aquellos préstamos en los que el libro ya haya sido
+--devuelto.
+
+SELECT librosMasDeUnEjemplarConIdInventario.isbn FROM 
+(SELECT librosMasDeUnEjemplar.isbn, ejemplar.idinventario, prestamo.fechaprestamo FROM (SELECT libro.isbn,count(libro.isbn) as cEjemplares FROM libro
+LEFT JOIN ejemplar ON ejemplar.isbn = libro.isbn
+GROUP BY libro.isbn
+HAVING count(libro.isbn) > 1) librosMasDeUnEjemplar
+LEFT JOIN ejemplar ON ejemplar.isbn = librosMasDeUnEjemplar.isbn
+LEFT JOIN prestamo ON prestamo.idinventario = ejemplar.idinventario) AS librosMasDeUnEjemplarConIdInventario,
+
+(SELECT librosMasDeUnEjemplar.isbn, ejemplar.idinventario, prestamo.fechaprestamo FROM (SELECT libro.isbn,count(libro.isbn) as cEjemplares FROM libro
+LEFT JOIN ejemplar ON ejemplar.isbn = libro.isbn
+GROUP BY libro.isbn
+HAVING count(libro.isbn) > 1) librosMasDeUnEjemplar
+LEFT JOIN ejemplar ON ejemplar.isbn = librosMasDeUnEjemplar.isbn
+LEFT JOIN prestamo ON prestamo.idinventario = ejemplar.idinventario) AS librosMasDeUnEjemplarConIdInventario2
+
+LEFT JOIN prestamo AS prestamo2 ON prestamo2.idinventario = librosMasDeUnEjemplarConIdInventario2.idinventario
+WHERE librosMasDeUnEjemplarConIdInventario.fechaprestamo = prestamo2.fechaprestamo 
+    OR librosMasDeUnEjemplarConIdInventario2.fechaprestamo = prestamo2.fechaprestamo
+    GROUP BY librosMasDeUnEjemplarConIdInventario.isbn
 */
 
 
