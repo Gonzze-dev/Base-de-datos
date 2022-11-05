@@ -4,6 +4,14 @@ SELECT * FROM ejemplar
 INNER JOIN libro ON ejemplar.isbn = libro.isbn
 INNER JOIN prestamo ON prestamo.idinventario != ejemplar.idinventario
 
+--Los libros pertenecientes a la categoría Marketing para los que haya habido pedidos
+--insatisfechos.
+
+SELECT * FROM Libro
+LEFT JOIN categorialibro ON categorialibro.isbn = libro.isbn
+LEFT JOIN categoria ON categoria.idcategoria = categorialibro.idcategoria
+LEFT JOIN pedidoinsatisfecho ON pedidoinsatisfecho.isbn = Libro.isbn
+WHERE categoria.categoria = 'Marketing'
 */
 
 
