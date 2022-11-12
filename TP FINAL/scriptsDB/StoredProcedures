@@ -1,3 +1,19 @@
+CREATE OR REPLACE FUNCTION getUserByMail(correoU VARCHAR) 
+RETURNS TABLE (cuil bigintPos, 
+               nombre VARCHAR(100),
+               contrasenia VARCHAR,
+               correo mail,
+               admin BOOLEAN,
+              id_carrito intPos)
+AS
+$getUsuerByCorreo$
+BEGIN
+
+ RETURN QUERY SELECT * FROM usuario WHERE usuario.correo = correoU;
+END;
+$getUsuerByCorreo$ 
+LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION insertUser(cuilU bigintPos, 
                                       nombreU VARCHAR(100),
                                      contraseniaU VARCHAR,
@@ -93,8 +109,6 @@ BEGIN
     INSERT INTO compra_libro(isbn, cantidad)
     VALUES (isbnL, 
             cantidadL);
-    UPDATE libro SET
-        stock = stock + cantidadL;
 
     RETURN ('EL LIBRO CON ' || isbnl || ' FUE AGREGADO Y SE ACTUALIZO SU STOCK CON EXITO!');
 END;

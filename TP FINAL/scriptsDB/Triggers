@@ -9,6 +9,48 @@ $crearCarritoCuandoSeCreaUsuario$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_crearCarrito BEFORE INSERT ON usuario
 FOR EACH ROW EXECUTE PROCEDURE crearCarrito(); 
 
+CREATE OR REPLACE FUNCTION actualizarStockLibro() RETURNS TRIGGER AS
+$actualizarStockLibro$
+DECLARE
+    stockLibro intPos;
+    nuevaCantidad intPos;
+BEGIN
+    SELECT stock INTO stockLibro FROM libro WHERE isbn = NEW.isbn;
+    
+    nuevaCantidad := stockLibro + NEW.cantidad;
+    
+    UPDATE libro
+        SET stock = nuevaCantidad
+    WHERE isbn = NEW.isbn;
+    
+    RETURN NEW;
+END;
+$actualizarStockLibro$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_actualizarStockLibro AFTER INSERT ON compra_libro
+FOR EACH ROW EXECUTE PROCEDURE actualizarStockLibro(); 
+
+CREATE OR REPLACE FUNCTION actualizarLibroComprado() RETURNS TRIGGER AS
+$actualizarLibroComprado$
+DECLARE
+    cantidad intPos;
+BEGIN
+    cantidad := NEW.stock;
+    UPDATE libro
+        SET stock = 0
+    WHERE isbn = NEW.isbn;
+    
+    INSERT INTO compra_libro(isbn, cantidad)
+    VALUES (NEW.isbn, cantidad);
+    
+    RETURN NEW;
+END;
+$actualizarLibroComprado$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_actualizarLibroComprado AFTER INSERT ON libro
+FOR EACH ROW EXECUTE PROCEDURE actualizarLibroComprado(); 
+
+
 CREATE OR REPLACE FUNCTION actualizarId_ordenDeOrdenDetalle() RETURNS TRIGGER AS
 $actualizarId_ordenDeOrdenDetalle$
 DECLARE
@@ -51,28 +93,6 @@ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_actualizarId_ordenDeOrdenDetalle AFTER DELETE ON linea_carrito
 FOR EACH ROW EXECUTE PROCEDURE actualizarId_ordenDeOrdenDetalle();
-
-
-CREATE OR REPLACE FUNCTION actualizarStockLibro() RETURNS TRIGGER AS
-$actualizarStockLibro$
-DECLARE
-    stockLibro intPos;
-    nuevaCantidad intPos;
-BEGIN
-    SELECT stock INTO stockLibro FROM libro WHERE isbn = NEW.isbn;
-    
-    nuevaCantidad := stockLibro + NEW.cantidad;
-    
-    UPDATE libro
-        SET stock = nuevaCantidad
-    WHERE isbn = NEW.isbn;
-    
-    RETURN NEW;
-END;
-$actualizarStockLibro$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trigger_actualizarStockLibro AFTER INSERT ON compra_libro
-FOR EACH ROW EXECUTE PROCEDURE actualizarStockLibro(); 
 
 CREATE OR REPLACE FUNCTION convertirLineaCarritoAOrden() RETURNS TRIGGER AS
 $convertirLineaCarritoAOrden$

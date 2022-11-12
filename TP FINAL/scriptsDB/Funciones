@@ -49,19 +49,3 @@ BEGIN
 END;
 $libroExists$ 
 LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION getUserByMail(correoU VARCHAR) 
-RETURNS TABLE (cuil bigintPos, 
-               nombre VARCHAR(100),
-               contrasenia VARCHAR,
-               correo mail,
-               admin BOOLEAN,
-              id_carrito intPos)
-AS
-$getUsuerByCorreo$
-BEGIN
-
- RETURN QUERY SELECT * FROM usuario WHERE usuario.correo = correoU;
-END;
-$getUsuerByCorreo$ 
-LANGUAGE plpgsql;

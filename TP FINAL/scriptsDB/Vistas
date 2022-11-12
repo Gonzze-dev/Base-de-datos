@@ -48,7 +48,7 @@ as  SELECT
     FROM libro l
     JOIN puntuacion p ON p.isbn = l.isbn
     WHERE p.puntuacion >= 1
-    GROUP BY l.isbn
+    GROUP BY l.isbn;
 
 CREATE OR REPLACE VIEW view_Libro
 as  SELECT 

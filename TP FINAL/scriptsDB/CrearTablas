@@ -119,8 +119,8 @@ CREATE TABLE IF NOT EXISTS usuario
 (
     cuil bigintPos NOT NULL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    contrasenia VARCHAR NOT NULL,
     correo mail NOT NULL,
+    contrasenia VARCHAR NOT NULL,
     telefono varchar,
     admin BOOLEAN DEFAULT false,
     id_carrito SERIAL NOT NULL,
@@ -175,7 +175,7 @@ CREATE TABLE IF NOT EXISTS direccion
 
 CREATE TABLE IF NOT EXISTS cupon
 (
-    codigo VARCHAR PRIMARY KEY,
+    codigo VARCHAR NOT NULL PRIMARY KEY,
     porc_descuento porcentage NOT NULL,
     usado BOOLEAN NOT NULL DEFAULT false
 );
