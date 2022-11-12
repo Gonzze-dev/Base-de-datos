@@ -1,34 +1,45 @@
-CREATE OR REPLACE FUNCTION eliminarLineaCarrito() RETURNS TRIGGER AS
-$eliminarLineaCarrito$
-DECLARE
-    qry varchar;
-    precioLibro Tprice;
-BEGIN
-    qry := 'SELECT precio FROM libro WHERE isbn = OLD.ISBN';
+CREATE TABLE IF NOT EXISTS pais
+(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(60) UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS provincia
+(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(60) UNIQUE NOT NULL,
+    id_pais intPos NOT NULL,
     
-    EXECUTE query INTO precioLibro;
+    CONSTRAINT FK_id_pais FOREIGN KEY (id_pais) REFERENCES pais(id)
     
-    INSERT INTO orden_detalle (precio, cantidad, isbn)
-    VALUES(precioLibro, OLD.cantidad, OLD.isbn);
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+);
 
-    RETURN NEW;
-END;
-$eliminarLineaCarrito$ 
-LANGUAGE plpgsql;
+CREATE TABLE IF NOT EXISTS ciudad
+(
+    cp smallintPos PRIMARY KEY NOT NULL,
+    nombre VARCHAR(60) unique NOT NULL,
+    id_provincia intPos NOT NULL,
+    
+    CONSTRAINT FK_id_provincia FOREIGN KEY (id_provincia) REFERENCES provincia(id)
+    
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+);
 
-CREATE TRIGGER trigger_eliminarLineaCarrito BEFORE DELETE ON linea_carrito
-FOR EACH ROW EXECUTE PROCEDURE eliminarLineaCarrito();
+CREATE TABLE IF NOT EXISTS idioma
+(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(20) UNIQUE NOT NULL
+);
 
-<<<<<<< HEAD
-CREATE OR REPLACE FUNCTION actualizarId_ordenDeOrdenDetalle() RETURNS TRIGGER AS
-$actualizarId_ordenDeOrdenDetalle$
-DECLARE
-    qryPrecio varchar;
-    maxId intPos;
-BEGIN
-    qryPrecio := 'SELECT sum(precio)::Tprice FROM orden_detalle WHERE id_orden = null';
-    EXECUTE query INTO maxId;
-=======
+CREATE TABLE IF NOT EXISTS autor
+(
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS tema
 (
     id SERIAL PRIMARY KEY,
@@ -53,23 +64,39 @@ CREATE TABLE IF NOT EXISTS libro
     fecha_ingreso DATE NOT NULL DEFAULT CURRENT_DATE,
     id_editorial intPos NOT NULL,
     id_idioma intPos NOT NULL,
->>>>>>> tps-en-produc-revert
     
-    INSERT INTO orden (fecha, total, cuil, id_direccion)
+    CONSTRAINT FK_id_editorial FOREIGN KEY (id_editorial) REFERENCES editorial(id),
+    CONSTRAINT FK_id_idioma FOREIGN KEY (id_idioma) REFERENCES idioma(id)
+
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+);
+
+CREATE TABLE IF NOT EXISTS compra_libro
+(
+    id SERIAL PRIMARY KEY,
+    fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+    isbn varchar NOT NULL,
+    cantidad intPos NOT NULL,
     
-    UPDATE orden_detalle
-        SET id_orden = maxId
-    WHERE id_orden = NULL;
+    CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn)
+    
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+);
 
-    RETURN NEW;
-END;
-$actualizarId_ordenDeOrdenDetalle$ 
-LANGUAGE plpgsql;
+CREATE TABLE IF NOT EXISTS asignar_tema
+(
+    isbn varchar NOT NULL,
+    id_tema intPos NOT NULL,
+    
+    CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
+    CONSTRAINT FK_id_tema FOREIGN KEY (id_tema) REFERENCES tema(id)
 
-<<<<<<< HEAD
-CREATE TRIGGER trigger_actualizarId_ordenDeOrdenDetalle AFTER DELETE ON linea_carrito
-FOR EACH ROW EXECUTE PROCEDURE actualizarId_ordenDeOrdenDetalle();
-=======
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+);
+
 CREATE TABLE IF NOT EXISTS escrito_por
 (
     isbn varchar NOT NULL,
@@ -77,12 +104,15 @@ CREATE TABLE IF NOT EXISTS escrito_por
     
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
     CONSTRAINT FK_id_autor FOREIGN KEY (id_autor) REFERENCES autor(id)
+
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS carrito
 (
     id SERIAL PRIMARY KEY,
-    fecha DATE NOT NULL DEFAULT CURRENT_DATE
+    fecha DATE DEFAULT(CURRENT_DATE)
 );
 
 CREATE TABLE IF NOT EXISTS usuario
@@ -91,11 +121,14 @@ CREATE TABLE IF NOT EXISTS usuario
     nombre VARCHAR(100) NOT NULL,
     contrasenia VARCHAR NOT NULL,
     correo mail NOT NULL,
-    telefono varchar NOT NULL,
+    telefono varchar,
     admin BOOLEAN DEFAULT false,
     id_carrito SERIAL NOT NULL,
     
     CONSTRAINT FK_id_carrito FOREIGN KEY (id_carrito) REFERENCES carrito(id)
+
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS favorito
@@ -105,6 +138,9 @@ CREATE TABLE IF NOT EXISTS favorito
 
     CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil),
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn)
+
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS linea_carrito
@@ -116,6 +152,8 @@ CREATE TABLE IF NOT EXISTS linea_carrito
     
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
     CONSTRAINT FK_id_carrito FOREIGN KEY (id_carrito) REFERENCES carrito(id)
+
+    ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS direccion
@@ -129,6 +167,9 @@ CREATE TABLE IF NOT EXISTS direccion
     
     CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil),
     CONSTRAINT FK_cp FOREIGN KEY (cp) REFERENCES ciudad(cp)
+
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
 );
 
 
@@ -142,21 +183,24 @@ CREATE TABLE IF NOT EXISTS cupon
 CREATE TABLE IF NOT EXISTS orden
 (
     id SERIAL PRIMARY KEY,
-    fecha date NOT NULL,
+    fecha DATE NOT NULL DEFAULT CURRENT_DATE,
     total Tprice NOT NULL,
-    codigo_cupon VARCHAR,
-    cuil bigintPos NOT NULL,
+    codigo_cupon VARCHAR DEFAULT NULL,
+    cuil bigintPos NOT NULL ,
     id_direccion intPos NOT NULL,
     
     CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil),
     CONSTRAINT FK_id_direccion FOREIGN KEY (id_direccion) REFERENCES direccion(id)
+
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS orden_detalle
 (
     id SERIAL PRIMARY KEY,
     precio Tprice NOT NULL,
-    cantidad intPos NOT NULL,
+    cantidad smallintPos NOT NULL,
     id_orden intPos DEFAULT(NULL),
     isbn varchar NOT NULL,
     id_carrito intPos NOT NULL,
@@ -164,5 +208,33 @@ CREATE TABLE IF NOT EXISTS orden_detalle
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
     CONSTRAINT FK_orden FOREIGN KEY (id_orden) REFERENCES orden(id),
     CONSTRAINT FK_id_carrito FOREIGN KEY (id_carrito) REFERENCES carrito(id)
+
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
 );
->>>>>>> tps-en-produc-revert
+
+CREATE TABLE IF NOT EXISTS opinion
+(
+    comentario VARCHAR,
+    isbn VARCHAR NOT NULL,
+    cuil bigintPos NOT NULL,
+
+    CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
+    CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil)
+
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+);
+
+CREATE TABLE IF NOT EXISTS puntuacion
+(
+    puntuacion Tpuntuation,
+    isbn VARCHAR NOT NULL,
+    cuil bigintPos NOT NULL,
+
+    CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
+    CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil)
+
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+);

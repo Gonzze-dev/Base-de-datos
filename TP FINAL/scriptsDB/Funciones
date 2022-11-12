@@ -37,6 +37,19 @@ END;
 $contraseniaValida$ 
 LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION libroExists(isbnLibro varchar) RETURNS BOOLEAN 
+AS
+$libroExists$
+DECLARE
+    libroRegistrado BOOLEAN;
+BEGIN
+    libroRegistrado = EXISTS(SELECT isbn FROM libro WHERE isbn = isbnLibro);
+
+ RETURN libroRegistrado;
+END;
+$libroExists$ 
+LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION getUserByMail(correoU VARCHAR) 
 RETURNS TABLE (cuil bigintPos, 
                nombre VARCHAR(100),
@@ -52,96 +65,3 @@ BEGIN
 END;
 $getUsuerByCorreo$ 
 LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION insertUser(cuilU bigintPos, 
-                                      nombreU VARCHAR(100),
-                                     contraseniaU VARCHAR,
-                                     correoU mail) RETURNS BOOLEAN
-AS
-$getUsuario$
-DECLARE
-    existeCuil BOOLEAN;
-    existeCorreo BOOLEAN;
-    noExisteUsuario BOOLEAN;
-    
-BEGIN
- 
- SELECT * INTO existeCuil FROM cuilExists(cuilU);
- SELECT * INTO existeCorreo FROM mailExists(correoU);
- noExisteUsuario = NOT (existeCuil OR existeCorreo);
- 
- IF noExisteUsuario THEN
-     INSERT INTO usuario (cuil, nombre, contrasenia, correo)
-     VALUES (cuilU, nombreU, contraseniaU, correoU);
- END IF;
- 
- RETURN noExisteUsuario;
-END;
-$getUsuario$
-LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION libroExists(isbnLibro varchar) RETURNS BOOLEAN 
-AS
-$libroExists$
-DECLARE
-    libroRegistrado BOOLEAN;
-BEGIN
-    libroRegistrado = EXISTS(SELECT isbn FROM libro WHERE isbn = isbnLibro);
-
- RETURN libroRegistrado;
-END;
-$libroExists$ 
-LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION agregarLibro(isbnL VARCHAR,
-                                        url_imagenL VARCHAR,
-                                        tituloL VARCHAR,
-                                        fecha_edicionL DATE,
-                                        precioL Tprice,
-                                        stockL intPos,
-                                        descripcionL varchar,
-                                        id_editorialL intPos,
-                                        id_idiomaL intPos)
-RETURNS character varying AS
-$agregarLibro$
-DECLARE
-    qry BOOLEAN;
-    existe BOOLEAN;
-BEGIN
-
-    SELECT * INTO existe FROM libroExists(isbnL);
-    
-    IF existe THEN
-        RAISE EXCEPTION 'ERORR AL INGRESAR EL LIBRO CON ISBN %', isbnL USING HINT = ' ya existe';
-    END IF;
-    
-
-    INSERT INTO libro (isbn,
-                           url_imagen,
-                           titulo,
-                           fecha_edicion,
-                           precio,
-                           stock,
-                           descripcion,
-                           id_editorial,
-                           id_idioma)
-        VALUES (isbnL,
-                url_imagenL,
-                tituloL,
-                fecha_edicionL,
-                precioL,
-                0,
-                descripcionL,
-                id_editorialL,
-                id_idiomaL);
-        INSERT INTO compra_libro(isbn, cantidad)
-        VALUES (isbnL, 
-                stockL);
-
-    RETURN ('EL LIBRO CON ' || isbnl || ' FUE AGREGADO CON EXITO!');
-END;
-$agregarLibro$ 
-LANGUAGE plpgsql;
-
-
-

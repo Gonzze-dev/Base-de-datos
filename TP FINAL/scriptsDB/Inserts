@@ -1,0 +1,17 @@
+--PAIS
+INSERT INTO pais (nombre)
+VALUES  ('Argentina'),
+        ('Chile'),
+        ('Uruguay'),
+        ('Colombia'),
+        ('Paraguay'),
+        ('Brasil'),
+        ('Bolivia'),
+        ('Bahamas'),
+        ('Costa Rica'),
+        ('Cuba'),
+        ('Republica Dominica'),
+        ('Ecuador'),
+        ('El Salvador'),
+        ('Granada'),
+        ('Mexico');
