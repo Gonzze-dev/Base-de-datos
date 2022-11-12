@@ -1,23 +1,33 @@
-CREATE OR REPLACE FUNCTION getUserByMail(correoU VARCHAR) 
+CREATE OR REPLACE FUNCTION getUserByMail(correoU mail) 
 RETURNS TABLE (cuil bigintPos, 
                nombre VARCHAR(100),
-               contrasenia VARCHAR,
                correo mail,
+               contrasenia VARCHAR,
+               telefono VARCHAR,
                admin BOOLEAN,
-              id_carrito intPos)
+                id_carrito int)
 AS
 $getUsuerByCorreo$
 BEGIN
 
- RETURN QUERY SELECT * FROM usuario WHERE usuario.correo = correoU;
+ RETURN QUERY SELECT usuario.cuil, 
+                     usuario.nombre, 
+                     usuario.correo,
+                     usuario.contrasenia,
+                     usuario.telefono,
+                     usuario.admin,
+                     usuario.id_carrito
+              FROM usuario 
+              WHERE usuario.correo = correoU::character varying;
 END;
 $getUsuerByCorreo$ 
 LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION insertUser(cuilU bigintPos, 
                                       nombreU VARCHAR(100),
-                                     contraseniaU VARCHAR,
-                                     correoU mail) RETURNS BOOLEAN
+                                      correoU mail,
+                                      contraseniaU VARCHAR,
+                                      telefonoU VARCHAR) RETURNS BOOLEAN
 AS
 $getUsuario$
 DECLARE
@@ -32,8 +42,8 @@ BEGIN
  noExisteUsuario = NOT (existeCuil OR existeCorreo);
  
  IF noExisteUsuario THEN
-     INSERT INTO usuario (cuil, nombre, contrasenia, correo)
-     VALUES (cuilU, nombreU, contraseniaU, correoU);
+     INSERT INTO usuario (cuil, nombre, correo, contrasenia, telefono)
+     VALUES (cuilU, nombreU, correoU, contraseniaU, telefonoU);
  END IF;
  
  RETURN noExisteUsuario;
@@ -79,13 +89,10 @@ BEGIN
                 tituloL,
                 fecha_edicionL,
                 precioL,
-                0,
+                stockL,
                 descripcionL,
                 id_editorialL,
                 id_idiomaL);
-        INSERT INTO compra_libro(isbn, cantidad)
-        VALUES (isbnL, 
-                stockL);
 
     RETURN ('EL LIBRO CON ' || isbnl || ' FUE AGREGADO CON EXITO!');
 END;
@@ -166,17 +173,17 @@ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION getFacturaUsuarioByCuil(cuilU bigintPos) 
 RETURNS TABLE (cuil bigintPos,
-            nombre VARCHAR(100),
-            titulo VARCHAR, 
-            idioma VARCHAR(20),
-            precio Tprice,
-            cantidad intPos,
-            total Tprice,
-            fecha DATE,
-            calle VARCHAR,
-            numero smallintPos,
-            piso_departamento VARCHAR(10),
-            cp smallintPos)
+                nombre VARCHAR(100),
+                titulo VARCHAR, 
+                idioma VARCHAR(20),
+                precio Tprice,
+                cantidad smallintPos,
+                total Tprice,
+                fecha DATE,
+                calle VARCHAR,
+                numero smallintPos,
+                piso_departamento VARCHAR(10),
+                cp smallintPos)
 AS
 $getCarritoUsuario$
 BEGIN
@@ -214,7 +221,7 @@ AS
 $getLibroByIsbn$
 BEGIN
 
- RETURN QUERY SELECT 
+ RETURN QUERY SELECT DISTINCT
                     vl.isbn,
                     vl.titulo,
                     vl.url_imagen,
@@ -229,4 +236,164 @@ BEGIN
                 WHERE vl.isbn = isbnL;
 END;
 $getLibroByIsbn$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION getLibrosOrdenadosMayorAMenor() 
+RETURNS TABLE (isbn varchar,
+            titulo VARCHAR(100),
+            url_imagen VARCHAR,
+            fecha_edicion DATE,
+            precio Tprice,
+            stock intPos,
+            descripcion VARCHAR,
+            PuntuacionPromedio decimal(2,2),
+            idioma VARCHAR(20),
+            editorial VARCHAR,
+            tema VARCHAR)
+AS
+$getLibrosOrdenadosMayorAMenor$
+BEGIN
+
+ RETURN QUERY SELECT vl.isbn,
+                     vl.titulo,
+                     vl.url_imagen,
+                     vl.fecha_edicion,
+                     vl.precio,
+                     vl.stock,
+                     vl.descripcion,
+                     vl.PuntuacionPromedio,
+                     vl.idioma,
+                     vl.editorial,
+                     vl.tema FROM view_Libro vl
+                ORDER BY vl.precio DESC;
+END;
+$getLibrosOrdenadosMayorAMenor$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION getLibrosOrdenadosMenorAMayor() 
+RETURNS TABLE (isbn varchar,
+            titulo VARCHAR(100),
+            url_imagen VARCHAR,
+            fecha_edicion DATE,
+            precio Tprice,
+            stock intPos,
+            descripcion VARCHAR,
+            PuntuacionPromedio decimal(2,2),
+            idioma VARCHAR(20),
+            editorial VARCHAR,
+            tema VARCHAR)
+AS
+$getLibrosOrdenadosMenorAMayor$
+BEGIN
+
+ RETURN QUERY SELECT vl.isbn,
+                     vl.titulo,
+                     vl.url_imagen,
+                     vl.fecha_edicion,
+                     vl.precio,
+                     vl.stock,
+                     vl.descripcion,
+                     vl.PuntuacionPromedio,
+                     vl.idioma,
+                     vl.editorial,
+                     vl.tema FROM view_Libro vl
+                ORDER BY vl.precio;
+END;
+$getLibrosOrdenadosMenorAMayor$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION getLibrosEnRangoPrecio(valMin Tprice, valMax Tprice)
+RETURNS TABLE (isbn varchar,
+            titulo VARCHAR(100),
+            url_imagen VARCHAR,
+            fecha_edicion DATE,
+            precio Tprice,
+            stock intPos,
+            descripcion VARCHAR,
+            PuntuacionPromedio decimal(2,2),
+            idioma VARCHAR(20),
+            editorial VARCHAR,
+            tema VARCHAR)
+AS
+$getLibrosEnRangoPrecio$
+BEGIN
+
+ RETURN QUERY SELECT vl.isbn,
+                     vl.titulo,
+                     vl.url_imagen,
+                     vl.fecha_edicion,
+                     vl.precio,
+                     vl.stock,
+                     vl.descripcion,
+                     vl.PuntuacionPromedio,
+                     vl.idioma,
+                     vl.editorial,
+                     vl.tema FROM view_Libro vl
+                WHERE vl.precio >= valMin AND vl.precio <= valMax;
+END;
+$getLibrosEnRangoPrecio$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION getLibrosByTema(nombreTema VARCHAR)
+RETURNS TABLE (isbn varchar,
+            titulo VARCHAR(100),
+            url_imagen VARCHAR,
+            fecha_edicion DATE,
+            precio Tprice,
+            stock intPos,
+            descripcion VARCHAR,
+            PuntuacionPromedio decimal(2,2),
+            idioma VARCHAR(20),
+            editorial VARCHAR,
+            tema VARCHAR)
+AS
+$getLibrosByTema$
+BEGIN
+
+ RETURN QUERY SELECT DISTINCT vl.isbn,
+                     vl.titulo,
+                     vl.url_imagen,
+                     vl.fecha_edicion,
+                     vl.precio,
+                     vl.stock,
+                     vl.descripcion,
+                     vl.PuntuacionPromedio,
+                     vl.idioma,
+                     vl.editorial,
+                     vl.tema FROM view_Libro vl
+                WHERE vl.tema = nombreTema;
+END;
+$getLibrosByTema$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION getLibrosByTitulo(nombreTitulo VARCHAR)
+RETURNS TABLE (isbn varchar,
+            titulo VARCHAR(100),
+            url_imagen VARCHAR,
+            fecha_edicion DATE,
+            precio Tprice,
+            stock intPos,
+            descripcion VARCHAR,
+            PuntuacionPromedio decimal(2,2),
+            idioma VARCHAR(20),
+            editorial VARCHAR,
+            tema VARCHAR)
+AS
+$getLibrosByTema$
+BEGIN
+
+ RETURN QUERY SELECT DISTINCT vl.isbn,
+                     vl.titulo,
+                     vl.url_imagen,
+                     vl.fecha_edicion,
+                     vl.precio,
+                     vl.stock,
+                     vl.descripcion,
+                     vl.PuntuacionPromedio,
+                     vl.idioma,
+                     vl.editorial,
+                     vl.tema FROM view_Libro vl
+                WHERE vl.titulo LIKE '%' || nombreTitulo || '%';
+END;
+$getLibrosByTema$
 LANGUAGE plpgsql;
