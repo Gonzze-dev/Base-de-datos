@@ -397,3 +397,51 @@ BEGIN
 END;
 $getLibrosByTema$
 LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION compraUsuarioRealizada(idCarrito intPos) RETURNS BOOLEAN 
+AS
+$libroExists$
+DECLARE
+    libroRegistrado BOOLEAN;
+    precioTotal Tprice;
+    totalCantidades intPos;
+    maxIdOrden intPos;
+    cuilUsuario bigintPos;
+    idDireccion intPos;
+BEGIN
+    
+    IF NOT EXISTS(SELECT id FROM carrito WHERE id = idCarrito) THEN
+        RAISE EXCEPTION 'El con id %', idCarrito USING HINT = 'no existe';
+    ELSEIF NOT EXISTS(SELECT id_carrito FROM linea_carrito WHERE id_carrito = idCarrito) THEN
+        RAISE EXCEPTION 'El con id %', idCarrito USING HINT = ' no tiene ningun producto a comprar';
+    END IF;
+    
+    DELETE FROM linea_carrito WHERE id_carrito = idCarrito;
+    
+    SELECT max(id_orden) INTO maxIdOrden FROM orden_detalle;
+
+    SELECT sum(cantidad) INTO totalCantidades FROM orden_detalle
+    WHERE id_orden = maxIdOrden;
+
+    SELECT sum(precio) INTO precioTotal FROM orden_detalle
+    WHERE id_orden = maxIdOrden;
+
+    SELECT cuil INTO cuilUsuario FROM usuario 
+    WHERE id_carrito = idCarrito;
+
+    SELECT direccion.id INTO idDireccion FROM direccion 
+    WHERE direccion.cuil = cuilUsuario;
+    
+    precioTotal = precioTotal * totalCantidades;
+    
+    INSERT INTO orden (total, cuil, id_direccion)
+    VALUES (precioTotal, cuilUsuario, idDireccion);
+    
+    ALTER TABLE orden_detalle
+        ADD CONSTRAINT FK_orden FOREIGN KEY (id_orden) REFERENCES orden(id);
+    
+    RETURN TRUE;
+END;
+$libroExists$ 
+LANGUAGE plpgsql;
