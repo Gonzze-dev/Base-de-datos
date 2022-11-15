@@ -19,6 +19,7 @@ constraint ck_Tpuntuation check (VALUE BETWEEN 0 and 5);
 CREATE DOMAIN mail as varchar
 constraint ck_mail check (VALUE ~* '([a-zA-Z]|_)[a-zA-Z0-9_.]+@[a-zA-Z]+[.][a-zA-Z]{2,4}([.][a-zA-Z]{2,4})*');
 
+
 CREATE TABLE IF NOT EXISTS pais
 (
     id SERIAL PRIMARY KEY,
@@ -58,7 +59,7 @@ CREATE TABLE IF NOT EXISTS idioma
 CREATE TABLE IF NOT EXISTS autor
 (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL
+    nombre VARCHAR(100) UNIQUE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS tema
@@ -111,6 +112,7 @@ CREATE TABLE IF NOT EXISTS asignar_tema
     isbn varchar NOT NULL,
     id_tema intPos NOT NULL,
     
+    CONSTRAINT PK_asignar_tema PRIMARY KEY (isbn, id_tema),
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
     CONSTRAINT FK_id_tema FOREIGN KEY (id_tema) REFERENCES tema(id)
 
@@ -123,6 +125,7 @@ CREATE TABLE IF NOT EXISTS escrito_por
     isbn varchar NOT NULL,
     id_autor intPos NOT NULL,
     
+    CONSTRAINT PK_escrito_por PRIMARY KEY (isbn, id_autor),
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
     CONSTRAINT FK_id_autor FOREIGN KEY (id_autor) REFERENCES autor(id)
 
@@ -140,7 +143,7 @@ CREATE TABLE IF NOT EXISTS usuario
 (
     cuil bigintPos NOT NULL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    correo mail NOT NULL,
+    correo mail UNIQUE NOT NULL,
     contrasenia VARCHAR NOT NULL,
     telefono varchar,
     admin BOOLEAN DEFAULT false,
@@ -157,6 +160,7 @@ CREATE TABLE IF NOT EXISTS favorito
     cuil bigintPos NOT NULL,
     isbn varchar NOT NULL,
 
+    CONSTRAINT PK_favorito PRIMARY KEY (isbn, cuil),
     CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil),
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn)
 
@@ -225,7 +229,7 @@ CREATE TABLE IF NOT EXISTS orden_detalle
     id_orden intPos DEFAULT(NULL),
     isbn varchar NOT NULL,
     id_carrito intPos NOT NULL,
-
+    
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
     CONSTRAINT FK_orden FOREIGN KEY (id_orden) REFERENCES orden(id),
     CONSTRAINT FK_id_carrito FOREIGN KEY (id_carrito) REFERENCES carrito(id)
@@ -240,6 +244,7 @@ CREATE TABLE IF NOT EXISTS opinion
     isbn VARCHAR NOT NULL,
     cuil bigintPos NOT NULL,
 
+    CONSTRAINT PK_opinion PRIMARY KEY (isbn, cuil),
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
     CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil)
 
@@ -253,12 +258,14 @@ CREATE TABLE IF NOT EXISTS puntuacion
     isbn VARCHAR NOT NULL,
     cuil bigintPos NOT NULL,
 
+    CONSTRAINT PK_puntuacion PRIMARY KEY (isbn, cuil),
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
     CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil)
 
     ON UPDATE CASCADE
     ON DELETE RESTRICT
 );
+
 
 CREATE OR REPLACE FUNCTION mailExists(correoU mail) RETURNS BOOLEAN 
 AS
@@ -1082,7 +1089,6 @@ VALUES  ('123-234-513', 'https://http2.mlimages.com/123-234-513', 'Harry Potter 
 --ASIGNAR_TEMA
 INSERT INTO asignar_tema (isbn, id_tema)
 VALUES  ('345-345-432', 1),
-        ('123-234-513', 1),
         ('456-546-232', 2),
         ('456-546-453', 3),
         ('234-543-251', 4),
@@ -1096,7 +1102,6 @@ VALUES  ('345-345-432', 1),
         ('345-854-383', 12),
         ('456-456-564', 13),
         ('456-543-453', 13),
-        ('345-345-432', 1),
         ('123-234-513', 1), 
         ('880-954-322', 5),
         ('321-432-134', 6),
@@ -1110,9 +1115,7 @@ VALUES  ('345-345-432', 1),
 
 --ESCRITO_POR
 INSERT INTO escrito_por (isbn, id_autor)
-VALUES  ('345-345-432', 1),
-        ('123-234-513', 1),
-        ('456-546-232', 2),
+VALUES  ('456-546-232', 2),
         ('456-546-453', 3),
         ('234-543-251', 4),
         ('342-543-673', 5),
@@ -1161,7 +1164,6 @@ VALUES (20424644309, 'Gonzalo Errandonea', 'gonzalo.errandonea@gmail.com', 'RACI
 INSERT INTO favorito (cuil, isbn)
 VALUES (20424644309, '345-345-432'),
         (21342284924,'123-234-513'),
-        (28428382374, '456-546-232'),
         (20694383722,'456-546-232'),
         (21395373841, '456-546-453'),
         (21392573047, '234-543-251'),
@@ -1169,14 +1171,12 @@ VALUES (20424644309, '345-345-432'),
         (21424647381, '880-954-322'),
         (24490432234, '321-432-134'),
         (20424644309, '123-234-513'),
-        (21342284924,'123-234-513'),
         (28428382374, '456-546-232'),
         (20694383722,'123-213-466'),
-        (21395373841, '456-546-453'),
         (21392573047, '456-546-453'),
         (20403957391, '123-213-466'),
-        (21424647381, '880-954-322'),
-        (24490432234, '345-345-432');
+        (24490432234, '345-345-432'),
+        (20424644309, '456-543-453');
 
 --LINEA_CARRITO
 INSERT INTO linea_carrito (cantidad, isbn, id_carrito) 
@@ -1232,10 +1232,8 @@ VALUES (20424644309, '345-345-432', 'Buen libro'),
         (21342284924,'123-234-513', 'Aburrido'),
         (28428382374, '456-546-232', 'No lo recomiendo para nada'),
         (20694383722,'123-213-466', 'Me gusto muchusimo, lo recomiendo'),
-        (21395373841, '456-546-453', 'Nada que acotar, la trama es buena'),
         (21392573047, '345-345-432', 'Malisimo'),
         (20403957391, '123-213-466', 'Malo'),
-        (21424647381, '880-954-322', 'Muy malo'),
         (24490432234, '345-345-432', 'Me gusto un poco');
 
 --PUNTUACION
@@ -1253,8 +1251,6 @@ VALUES (20424644309, '345-345-432', 1),
         (21342284924,'123-234-513', 3),
         (28428382374, '456-546-232', 2),
         (20694383722,'123-213-466', 2),
-        (21395373841, '456-546-453', 1),
         (21392573047, '345-345-432', 1),
         (20403957391, '123-213-466', 3),
-        (21424647381, '880-954-322', 5),
         (24490432234, '345-345-432', 3);

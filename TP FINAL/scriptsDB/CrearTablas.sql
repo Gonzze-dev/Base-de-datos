@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS idioma
 CREATE TABLE IF NOT EXISTS autor
 (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL
+    nombre VARCHAR(100) UNIQUE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS tema
@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS asignar_tema
     isbn varchar NOT NULL,
     id_tema intPos NOT NULL,
     
+    CONSTRAINT PK_asignar_tema PRIMARY KEY (isbn, id_tema),
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
     CONSTRAINT FK_id_tema FOREIGN KEY (id_tema) REFERENCES tema(id)
 
@@ -102,6 +103,7 @@ CREATE TABLE IF NOT EXISTS escrito_por
     isbn varchar NOT NULL,
     id_autor intPos NOT NULL,
     
+    CONSTRAINT PK_escrito_por PRIMARY KEY (isbn, id_autor),
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
     CONSTRAINT FK_id_autor FOREIGN KEY (id_autor) REFERENCES autor(id)
 
@@ -119,7 +121,7 @@ CREATE TABLE IF NOT EXISTS usuario
 (
     cuil bigintPos NOT NULL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    correo mail NOT NULL,
+    correo mail UNIQUE NOT NULL,
     contrasenia VARCHAR NOT NULL,
     telefono varchar,
     admin BOOLEAN DEFAULT false,
@@ -136,6 +138,7 @@ CREATE TABLE IF NOT EXISTS favorito
     cuil bigintPos NOT NULL,
     isbn varchar NOT NULL,
 
+    CONSTRAINT PK_favorito PRIMARY KEY (isbn, cuil),
     CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil),
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn)
 
@@ -204,7 +207,7 @@ CREATE TABLE IF NOT EXISTS orden_detalle
     id_orden intPos DEFAULT(NULL),
     isbn varchar NOT NULL,
     id_carrito intPos NOT NULL,
-
+    
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
     CONSTRAINT FK_orden FOREIGN KEY (id_orden) REFERENCES orden(id),
     CONSTRAINT FK_id_carrito FOREIGN KEY (id_carrito) REFERENCES carrito(id)
@@ -219,6 +222,7 @@ CREATE TABLE IF NOT EXISTS opinion
     isbn VARCHAR NOT NULL,
     cuil bigintPos NOT NULL,
 
+    CONSTRAINT PK_opinion PRIMARY KEY (isbn, cuil),
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
     CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil)
 
@@ -232,6 +236,7 @@ CREATE TABLE IF NOT EXISTS puntuacion
     isbn VARCHAR NOT NULL,
     cuil bigintPos NOT NULL,
 
+    CONSTRAINT PK_puntuacion PRIMARY KEY (isbn, cuil),
     CONSTRAINT FK_isbn FOREIGN KEY (isbn) REFERENCES libro(isbn),
     CONSTRAINT FK_cuil FOREIGN KEY (cuil) REFERENCES usuario(cuil)
 
