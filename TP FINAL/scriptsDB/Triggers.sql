@@ -79,3 +79,36 @@ $convertirLineaCarritoAOrden_detalle$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_convertirLineaCarritoAOrden_detalle AFTER DELETE ON linea_carrito
 FOR EACH ROW EXECUTE PROCEDURE convertirLineaCarritoAOrden_detalle();
+
+CREATE OR REPLACE FUNCTION minAMayus() RETURNS TRIGGER AS
+$minAMayus$
+BEGIN
+    NEW.nombre := upper(NEW.nombre);
+    
+    RETURN NEW;
+END;
+$minAMayus$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_minAMayus_Idioma BEFORE INSERT ON idioma
+FOR EACH ROW EXECUTE PROCEDURE minAMayus();
+
+CREATE TRIGGER trigger_minAMayus_Autor BEFORE INSERT ON autor
+FOR EACH ROW EXECUTE PROCEDURE minAMayus(); 
+
+CREATE TRIGGER trigger_minAMayus_Tema BEFORE INSERT ON tema
+FOR EACH ROW EXECUTE PROCEDURE minAMayus(); 
+
+CREATE TRIGGER trigger_minAMayus_Editorial BEFORE INSERT ON editorial
+FOR EACH ROW EXECUTE PROCEDURE minAMayus();
+
+CREATE OR REPLACE FUNCTION minAMayusCorreo() RETURNS TRIGGER AS
+$minAMayus$
+BEGIN
+    NEW.correo := upper(NEW.correo);
+    
+    RETURN NEW;
+END;
+$minAMayus$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_minAMayusCorreo BEFORE INSERT ON usuario
+FOR EACH ROW EXECUTE PROCEDURE minAMayusCorreo();

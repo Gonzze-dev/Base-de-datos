@@ -1,5 +1,5 @@
 CREATE DOMAIN porcentage as int2
-constraint ck_porcentage check (VALUE BETWEEN 0 and 100);
+constraint pito check (VALUE BETWEEN 0 and 100);
 
 CREATE DOMAIN smallintPos as int
 constraint ck_smallintPos check (VALUE BETWEEN 0 and 65535);
@@ -849,6 +849,48 @@ $convertirLineaCarritoAOrden_detalle$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_convertirLineaCarritoAOrden_detalle AFTER DELETE ON linea_carrito
 FOR EACH ROW EXECUTE PROCEDURE convertirLineaCarritoAOrden_detalle();
 
+CREATE OR REPLACE FUNCTION minAMayus() RETURNS TRIGGER AS
+$minAMayus$
+BEGIN
+    NEW.nombre := upper(NEW.nombre);
+    
+    RETURN NEW;
+END;
+$minAMayus$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_minAMayus_Idioma BEFORE INSERT ON idioma
+FOR EACH ROW EXECUTE PROCEDURE minAMayus();
+
+CREATE TRIGGER trigger_minAMayus_Autor BEFORE INSERT ON autor
+FOR EACH ROW EXECUTE PROCEDURE minAMayus(); 
+
+CREATE TRIGGER trigger_minAMayus_Tema BEFORE INSERT ON tema
+FOR EACH ROW EXECUTE PROCEDURE minAMayus(); 
+
+CREATE TRIGGER trigger_minAMayus_Editorial BEFORE INSERT ON editorial
+FOR EACH ROW EXECUTE PROCEDURE minAMayus();
+
+CREATE TRIGGER trigger_minAMayus_Pais BEFORE INSERT ON pais
+FOR EACH ROW EXECUTE PROCEDURE minAMayus();
+
+CREATE TRIGGER trigger_minAMayus_Provincia BEFORE INSERT ON provincia
+FOR EACH ROW EXECUTE PROCEDURE minAMayus();
+
+CREATE TRIGGER trigger_minAMayus_Ciudad BEFORE INSERT ON ciudad
+FOR EACH ROW EXECUTE PROCEDURE minAMayus();
+
+CREATE OR REPLACE FUNCTION minAMayusCorreo() RETURNS TRIGGER AS
+$minAMayus$
+BEGIN
+    NEW.correo := upper(NEW.correo);
+    
+    RETURN NEW;
+END;
+$minAMayus$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_minAMayusCorreo BEFORE INSERT ON usuario
+FOR EACH ROW EXECUTE PROCEDURE minAMayusCorreo();
+
 CREATE OR REPLACE VIEW view_FavoritosUusario
 as SELECT u.cuil, 
     u.nombre, 
@@ -1254,3 +1296,37 @@ VALUES (20424644309, '345-345-432', 1),
         (21392573047, '345-345-432', 1),
         (20403957391, '123-213-466', 3),
         (24490432234, '345-345-432', 3);
+
+
+--CREAR USUARIOS
+CREATE USER normalUser WITH PASSWORD '111';
+CREATE USER adminUser WITH PASSWORD '222';
+CREATE USER superAdminUser WITH PASSWORD '333';
+
+--PERMISOS USUARIO
+GRANT INSERT, UPDATE ON usuario, 
+                        linea_carrito, 
+                        direccion,
+                        opinion,
+                        puntuacion,
+                        favorito,
+                        carrito
+                        TO normalUser;
+
+GRANT SELECT ON ALL TABLES IN SCHEMA PUBLIC TO normalUser;
+
+GRANT DELETE ON favorito,
+                linea_carrito
+                TO normalUser;
+
+                
+--PERMISOS ADMIN
+GRANT INSERT, UPDATE, SELECT ON ALL TABLES IN SCHEMA PUBLIC TO adminUser;
+
+
+GRANT DELETE ON asignar_tema, 
+                escrito_por
+                TO adminUser;
+
+--PERMISOS SUPER ADMIN
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA PUBLIC TO superAdminUser;
