@@ -49,3 +49,38 @@ BEGIN
 END;
 $libroExists$ 
 LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION quedaStock(cantComprada intPos,
+                                       isbnL VARCHAR) RETURNS BOOLEAN 
+AS
+$quedaStock$
+DECLARE
+    quedaStock BOOLEAN;
+    stockL intPos;
+BEGIN
+    
+    SELECT stock INTO stockL FROM libro WHERE isbn = isbnL;
+
+    quedaStock := (stockL - cantComprada)::int >= 0;
+    
+    RETURN quedaStock;
+END;
+$quedaStock$ 
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION existeDireccion(idCarrito intPos) RETURNS BOOLEAN 
+AS
+$existeDireccion$
+DECLARE
+    existsDireccion BOOLEAN;
+BEGIN
+    
+    existsDireccion := EXISTS(SELECT direccion.id FROM usuario
+          JOIN direccion ON direccion.cuil = usuario.cuil
+          WHERE usuario.id_carrito = idCarrito);
+
+    
+    RETURN existsDireccion;
+END;
+$existeDireccion$ 
+LANGUAGE plpgsql;

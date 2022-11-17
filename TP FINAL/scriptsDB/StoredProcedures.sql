@@ -153,6 +153,7 @@ RETURNS TABLE (cuil bigintPos,
             titulo VARCHAR, 
             fecha_edicion date,
             precio Tprice,
+            cantidad smallintPos,
             descripcion VARCHAR,
             idioma VARCHAR(20))
 AS
@@ -163,13 +164,15 @@ BEGIN
             cu.nombre, 
             cu.titulo,
             cu.fecha_edicion, 
-            cu.precio, 
+            cu.precio,
+            cu.cantidad,
             cu.descripcion,
             cu.idioma FROM view_CarritoUsuario cu
             WHERE cu.cuil = cuilU;
 END;
 $getCarritoUsuario$
 LANGUAGE plpgsql;
+
 
 CREATE OR REPLACE FUNCTION getFacturaUsuarioByCuil(cuilU bigintPos) 
 RETURNS TABLE (cuil bigintPos,

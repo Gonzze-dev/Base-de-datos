@@ -319,6 +319,41 @@ END;
 $libroExists$ 
 LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION existeDireccion(idCarrito intPos) RETURNS BOOLEAN 
+AS
+$existeDireccion$
+DECLARE
+    existsDireccion BOOLEAN;
+BEGIN
+    
+    existsDireccion := EXISTS(SELECT direccion.id FROM usuario
+          JOIN direccion ON direccion.cuil = usuario.cuil
+          WHERE usuario.id_carrito = idCarrito);
+
+    
+    RETURN existsDireccion;
+END;
+$existeDireccion$ 
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION quedaStock(cantComprada intPos,
+                                       isbnL VARCHAR) RETURNS BOOLEAN 
+AS
+$quedaStock$
+DECLARE
+    quedaStock BOOLEAN;
+    stockL intPos;
+BEGIN
+    
+    SELECT libro.stock INTO stockL FROM libro WHERE libro.isbn = isbnL;
+
+    quedaStock := (stockL - cantComprada)::int >= 0;
+    
+    RETURN quedaStock;
+END;
+$quedaStock$ 
+LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION getUserByMail(correoU mail) 
 RETURNS TABLE (cuil bigintPos, 
                nombre VARCHAR(100),
@@ -474,6 +509,7 @@ RETURNS TABLE (cuil bigintPos,
             titulo VARCHAR, 
             fecha_edicion date,
             precio Tprice,
+            cantidad smallintPos,
             descripcion VARCHAR,
             idioma VARCHAR(20))
 AS
@@ -484,7 +520,8 @@ BEGIN
             cu.nombre, 
             cu.titulo,
             cu.fecha_edicion, 
-            cu.precio, 
+            cu.precio,
+            cu.cantidad,
             cu.descripcion,
             cu.idioma FROM view_CarritoUsuario cu
             WHERE cu.cuil = cuilU;
@@ -825,6 +862,16 @@ DECLARE
     maxIdOrden intPos;
     precioLibro Tprice;
 BEGIN
+    
+    IF NOT existeDireccion(OLD.id_carrito) THEN
+        RAISE EXCEPTION 'NO SE PUDO REALIZAR LA COMPRA DEL LIBRO CON ISBN %', OLD.isbn USING HINT = 'EL USUARIO CON ID CARRITO ' || OLD.id_carrito || ' NO TIENE UNA DIRECCION';
+    END IF;
+
+    IF NOT quedaStock(OLD.cantidad, OLD.isbn) THEN
+        ROLLBACK;
+        RAISE EXCEPTION 'NO SE PUDO REALIZAR LA COMPRA DEL LIBRO CON ISBN %', OLD.isbn USING HINT = 'LA CANTIDAD A COMPRAR ES MAYOR QUE LA DEL LIBRO';
+    END IF;
+    
     ALTER TABLE orden_detalle
         DROP CONSTRAINT IF EXISTS FK_orden;
     
@@ -841,6 +888,10 @@ BEGIN
     
     INSERT INTO orden_detalle (precio, cantidad, id_orden, isbn, id_carrito)
     VALUES (precioLibro,OLD.cantidad, maxIdOrden, OLD.isbn, OLD.id_carrito);
+    
+    UPDATE libro SET
+        stock = stock - OLD.cantidad
+    WHERE isbn = OLD.isbn;
     
     RETURN NEW;
 END;
@@ -908,7 +959,8 @@ as SELECT u.cuil,
         u.nombre, 
         l.titulo,
         l.fecha_edicion, 
-        l.precio, 
+        l.precio,
+        lc.cantidad,
         l.descripcion,
         i.nombre as idioma FROM usuario u
 JOIN linea_carrito lc ON lc.id_carrito = u.id_carrito

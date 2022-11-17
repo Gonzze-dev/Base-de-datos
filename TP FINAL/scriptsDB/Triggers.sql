@@ -56,6 +56,16 @@ DECLARE
     maxIdOrden intPos;
     precioLibro Tprice;
 BEGIN
+    
+    IF NOT existeDireccion(OLD.id_carrito) THEN
+        RAISE EXCEPTION 'NO SE PUDO REALIZAR LA COMPRA DEL LIBRO CON ISBN %', OLD.isbn USING HINT = 'EL USUARIO CON ID CARRITO ' || OLD.id_carrito || ' NO TIENE UNA DIRECCION';
+    END IF;
+
+    IF NOT quedaStock(OLD.cantidad, OLD.isbn) THEN
+        ROLLBACK;
+        RAISE EXCEPTION 'NO SE PUDO REALIZAR LA COMPRA DEL LIBRO CON ISBN %', OLD.isbn USING HINT = 'LA CANTIDAD A COMPRAR ES MAYOR QUE LA DEL LIBRO';
+    END IF;
+    
     ALTER TABLE orden_detalle
         DROP CONSTRAINT IF EXISTS FK_orden;
     
@@ -72,6 +82,10 @@ BEGIN
     
     INSERT INTO orden_detalle (precio, cantidad, id_orden, isbn, id_carrito)
     VALUES (precioLibro,OLD.cantidad, maxIdOrden, OLD.isbn, OLD.id_carrito);
+    
+    UPDATE libro SET
+        stock = stock - OLD.cantidad
+    WHERE isbn = OLD.isbn;
     
     RETURN NEW;
 END;

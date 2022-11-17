@@ -47,10 +47,10 @@ SELECT insertUser(2022435319, 'Miriam Moyano', 'mariano.32.132@gmail.com', '213h
 SELECT agregarLibro('231-222-511', 'https://http2.mlimages.com/231-222-511', 'Narnia 3', '10/12/2022', 99.99, 1000, 'aqui deberia de haber una descripcion', '1', '1');
 
 --TEST 16 AGREGAR UN LIBRO CON ISBN YA REGISTRADO
-SELECT agregarLibro('123-234-513', 'https://http2.mlimages.com/231-222-511', 'Narnia 3', '10/12/2022', 99.99, 1000, 'aqui deberia de haber una descripcion', '1', '1');
+SELECT agregarLibro('234-543-251', 'https://http2.mlimages.com/231-222-511', 'Narnia 3', '10/12/2022', 99.99, 1000, 'aqui deberia de haber una descripcion', '1', '1');
 
 --TEST 17 AGREGAR STOCK A UN LIBRO EXISTENTE
-SELECT agregarLibroComprado('123-234-513', 10);
+SELECT agregarLibroComprado('234-543-251', 10);
 
 --TEST 18 AGREGAR STOCK A UN LIBRO NO EXISTENTE
 SELECT agregarLibroComprado('1', 10);
@@ -74,7 +74,7 @@ SELECT * FROM getFacturaUsuarioByCuil('20424644309');
 SELECT * FROM getFacturaUsuarioByCuil('2049');
 
 --TEST 24 OBTENER LIBROS VIA ISBN EXISTENTE
-SELECT * FROM getLibroByIsbn('123-234-513');
+SELECT * FROM getLibroByIsbn('234-543-251');
 
 --TEST 24 OBTENER LIBROS VIA ISBN NO EXISTENTE
 SELECT * FROM getLibroByIsbn('123-23');
@@ -111,3 +111,16 @@ SELECT compraUsuarioRealizada(0);
 
 --TEST 34 COMPLETAR LA COMPRA DEL USUARIO SIN QUE ESTE TENGA UNA DIRECCION A DONDE ENVIAR LOS LIBROS COMPRADOS
 SELECT compraUsuarioRealizada(3);
+
+--TEST 35 COMPROBAR SI QUEDA STOCK CON UN NUMERO INFERIOR AL STOCK QUE HAY EN DICHO LIRBO
+SELECT quedaStock(9, '234-543-251');
+
+--TEST 36 COMPROBAR SI QUEDA STOCK CON UN NUMERO SUPERIOR AL STOCK QUE HAY EN DICHO LIRBO
+SELECT quedaStock(11, '234-543-251');
+
+--TESTE 37 COMPROBAR SI EXISTE UNA DIRECCION VIA ID DEL CARRITO DE UN USUARIO
+SELECT existeDireccion(1);
+
+--TESTE 37 COMPROBAR SI EXISTE UNA DIRECCION VIA ID DEL CARRITO DE UN USUARIO EL CUAL NO TIENE DIRECCION CARGADA
+SELECT existeDireccion(3);
+
