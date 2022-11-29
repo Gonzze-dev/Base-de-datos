@@ -8,17 +8,20 @@ RETURNS TABLE (cuil bigintPos,
                 id_carrito int)
 AS
 $getUsuerByCorreo$
+DECLARE
+correoString varchar;
 BEGIN
+    correoU := upper(correoU);
+    RETURN QUERY SELECT usuario.cuil, 
+                        usuario.nombre, 
+                        usuario.correo,
+                        usuario.contrasenia,
+                        usuario.telefono,
+                        usuario.admin,
+                        usuario.id_carrito
+                FROM usuario 
+                WHERE usuario.correo = correoU::character varying;
 
- RETURN QUERY SELECT usuario.cuil, 
-                     usuario.nombre, 
-                     usuario.correo,
-                     usuario.contrasenia,
-                     usuario.telefono,
-                     usuario.admin,
-                     usuario.id_carrito
-              FROM usuario 
-              WHERE usuario.correo = correoU::character varying;
 END;
 $getUsuerByCorreo$ 
 LANGUAGE plpgsql;
@@ -27,30 +30,35 @@ CREATE OR REPLACE FUNCTION insertUser(cuilU bigintPos,
                                       nombreU VARCHAR(100),
                                       correoU mail,
                                       contraseniaU VARCHAR,
-                                      telefonoU VARCHAR) RETURNS BOOLEAN
+                                      telefonoU VARCHAR) RETURNS VARCHAR
 AS
 $getUsuario$
 DECLARE
     existeCuil BOOLEAN;
     existeCorreo BOOLEAN;
-    noExisteUsuario BOOLEAN;
-    
+
 BEGIN
  
- SELECT * INTO existeCuil FROM cuilExists(cuilU);
- SELECT * INTO existeCorreo FROM mailExists(correoU);
- noExisteUsuario = NOT (existeCuil OR existeCorreo);
- 
- IF noExisteUsuario THEN
-     INSERT INTO usuario (cuil, nombre, correo, contrasenia, telefono)
-     VALUES (cuilU, nombreU, correoU, contraseniaU, telefonoU);
- END IF;
- 
- RETURN noExisteUsuario;
+    SELECT * INTO existeCuil FROM cuilExists(cuilU);
+    SELECT * INTO existeCorreo FROM mailExists(correoU);
+
+    IF existeCuil THEN
+        RAISE EXCEPTION 'ERORR AL INGRESAR EL USUARIO CON CUIL %', cuilU USING HINT = ' YA EXISTE';
+    END IF;
+    
+    IF existeCorreo THEN
+        RAISE EXCEPTION 'ERORR AL INGRESAR EL USUARIO CON CORREO %', correoU USING HINT = ' YA EXISTE';
+    END IF;
+
+
+    INSERT INTO usuario (cuil, nombre, correo, contrasenia, telefono)
+    VALUES (cuilU, nombreU, correoU, contraseniaU, telefonoU);
+
+
+    RETURN 'USUARIO CON CUIL ' || cuilU || ' Y CORREO ' || correoU || ' AGREGADO CON EXITO!';
 END;
 $getUsuario$
 LANGUAGE plpgsql;
-
 
 CREATE OR REPLACE FUNCTION agregarLibro(isbnL VARCHAR,
                                         url_imagenL VARCHAR,
@@ -133,9 +141,18 @@ RETURNS TABLE (cuil bigintPos,
             idioma VARCHAR(20))
 AS
 $getFavUsuarioByCuil$
-BEGIN
+DECLARE
+    existeCuil BOOLEAN;
 
- RETURN QUERY SELECT vfu.cuil, 
+BEGIN
+ 
+    SELECT * INTO existeCuil FROM cuilExists(cuilU);
+    
+    IF NOT existeCuil THEN
+        RAISE EXCEPTION 'ERORR EL USUARIO CON CUIL %', cuilU USING HINT = ' NO EXISTE';
+    END IF;
+    
+    RETURN QUERY SELECT vfu.cuil, 
                     vfu.nombre, 
                     vfu.titulo, 
                     vfu.fecha_edicion,
@@ -158,17 +175,27 @@ RETURNS TABLE (cuil bigintPos,
             idioma VARCHAR(20))
 AS
 $getCarritoUsuario$
-BEGIN
+DECLARE
+    existeCuil BOOLEAN;
+    existeCorreo BOOLEAN;
 
- RETURN QUERY SELECT cu.cuil, 
-            cu.nombre, 
-            cu.titulo,
-            cu.fecha_edicion, 
-            cu.precio,
-            cu.cantidad,
-            cu.descripcion,
-            cu.idioma FROM view_CarritoUsuario cu
-            WHERE cu.cuil = cuilU;
+BEGIN
+ 
+    SELECT * INTO existeCuil FROM cuilExists(cuilU);
+
+    IF NOT existeCuil THEN
+        RAISE EXCEPTION 'ERORR EL USUARIO CON CUIL %', cuilU USING HINT = ' NO EXISTE';
+    END IF;
+
+    RETURN QUERY SELECT cu.cuil, 
+                        cu.nombre, 
+                        cu.titulo,
+                        cu.fecha_edicion, 
+                        cu.precio,
+                        cu.cantidad,
+                        cu.descripcion,
+                        cu.idioma FROM view_CarritoUsuario cu
+                        WHERE cu.cuil = cuilU;
 END;
 $getCarritoUsuario$
 LANGUAGE plpgsql;
@@ -189,9 +216,18 @@ RETURNS TABLE (cuil bigintPos,
                 cp smallintPos)
 AS
 $getCarritoUsuario$
-BEGIN
+DECLARE
+    existeCuil BOOLEAN;
 
- RETURN QUERY SELECT vfu.cuil, 
+BEGIN
+ 
+    SELECT * INTO existeCuil FROM cuilExists(cuilU);
+    
+    IF NOT existeCuil THEN
+        RAISE EXCEPTION 'ERORR EL USUARIO CON CUIL %', cuilU USING HINT = ' NO EXISTE';
+    END IF;
+
+    RETURN QUERY SELECT vfu.cuil, 
                     vfu.nombre, 
                     vfu.titulo,
                     vfu.idioma,
@@ -222,9 +258,17 @@ RETURNS TABLE (isbn varchar,
             tema VARCHAR)
 AS
 $getLibroByIsbn$
+DECLARE
+    existe BOOLEAN;
 BEGIN
 
- RETURN QUERY SELECT DISTINCT
+    SELECT * INTO existe FROM libroExists(isbnL);
+    
+    IF NOT existe THEN
+        RAISE EXCEPTION 'ERORR AL INGRESAR EL LIBRO CON ISBN %', isbnL USING HINT = ' NO EXISTE';
+    END IF;
+    
+    RETURN QUERY SELECT DISTINCT
                     vl.isbn,
                     vl.titulo,
                     vl.url_imagen,
@@ -320,19 +364,24 @@ RETURNS TABLE (isbn varchar,
 AS
 $getLibrosEnRangoPrecio$
 BEGIN
+    
+    IF NOT valMin <= valMax THEN
+        RAISE EXCEPTION 'ERORR, EL VALOR MINIMO %', valMin || ' ES MAYOR QUE EL VALOR MAXIMO ' || valMax isbnL USING HINT = ' NO EXISTE';
+    END IF;
+    
+    RETURN QUERY SELECT vl.isbn,
+                        vl.titulo,
+                        vl.url_imagen,
+                        vl.fecha_edicion,
+                        vl.precio,
+                        vl.stock,
+                        vl.descripcion,
+                        vl.PuntuacionPromedio,
+                        vl.idioma,
+                        vl.editorial,
+                        vl.tema FROM view_Libro vl
+                    WHERE vl.precio >= valMin AND vl.precio <= valMax;
 
- RETURN QUERY SELECT vl.isbn,
-                     vl.titulo,
-                     vl.url_imagen,
-                     vl.fecha_edicion,
-                     vl.precio,
-                     vl.stock,
-                     vl.descripcion,
-                     vl.PuntuacionPromedio,
-                     vl.idioma,
-                     vl.editorial,
-                     vl.tema FROM view_Libro vl
-                WHERE vl.precio >= valMin AND vl.precio <= valMax;
 END;
 $getLibrosEnRangoPrecio$
 LANGUAGE plpgsql;
@@ -351,20 +400,28 @@ RETURNS TABLE (isbn varchar,
             tema VARCHAR)
 AS
 $getLibrosByTema$
+DECLARE
+    existeTema BOOLEAN;
 BEGIN
-
- RETURN QUERY SELECT DISTINCT vl.isbn,
-                     vl.titulo,
-                     vl.url_imagen,
-                     vl.fecha_edicion,
-                     vl.precio,
-                     vl.stock,
-                     vl.descripcion,
-                     vl.PuntuacionPromedio,
-                     vl.idioma,
-                     vl.editorial,
-                     vl.tema FROM view_Libro vl
-                WHERE vl.tema = nombreTema;
+    nombreTema := upper(nombreTema);
+    existeTema:= EXISTS(SELECT nombre FROM tema WHERE nombre = nombreTema);
+    
+    IF NOT existeTema THEN
+        RAISE EXCEPTION 'ERORR, CON EL TEMA %', nombreTema USING HINT = ' NO EXISTE';
+    END IF;
+    
+     RETURN QUERY SELECT DISTINCT vl.isbn,
+                         vl.titulo,
+                         vl.url_imagen,
+                         vl.fecha_edicion,
+                         vl.precio,
+                         vl.stock,
+                         vl.descripcion,
+                         vl.PuntuacionPromedio,
+                         vl.idioma,
+                         vl.editorial,
+                         vl.tema FROM view_Libro vl
+                    WHERE vl.tema = nombreTema;
 END;
 $getLibrosByTema$
 LANGUAGE plpgsql;
@@ -415,9 +472,9 @@ DECLARE
 BEGIN
     
     IF NOT EXISTS(SELECT id FROM carrito WHERE id = idCarrito) THEN
-        RAISE EXCEPTION 'El con id %', idCarrito USING HINT = 'no existe';
+        RAISE EXCEPTION 'El usuario con id_carrito %', idCarrito USING HINT = 'no existe';
     ELSEIF NOT EXISTS(SELECT id_carrito FROM linea_carrito WHERE id_carrito = idCarrito) THEN
-        RAISE EXCEPTION 'El con id %', idCarrito USING HINT = ' no tiene ningun producto a comprar';
+        RAISE EXCEPTION 'El usuario con id_carrito %', idCarrito USING HINT = ' no tiene ningun producto a comprar';
     END IF;
     
     DELETE FROM linea_carrito WHERE id_carrito = idCarrito;

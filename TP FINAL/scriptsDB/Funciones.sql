@@ -3,8 +3,10 @@ AS
 $existeCorreo$
 DECLARE
     correoRegistrado BOOLEAN;
+    correoString varchar;
 BEGIN
-    correoRegistrado = EXISTS(SELECT correo FROM usuario WHERE correo = correoU);
+    correoString := upper(correoU::varchar);
+    correoRegistrado = EXISTS(SELECT correo FROM usuario WHERE correo = correoString);
 
  RETURN correoRegistrado;
 END;
@@ -29,9 +31,11 @@ AS
 $contraseniaValida$
 DECLARE
     contraseniaV BOOLEAN;
+    correoString varchar;
 BEGIN
-    contraseniaV = EXISTS(SELECT contrasenia FROM usuario WHERE correo = correoU AND contrasenia = contraseniaU);
-
+    correoString := upper(correoU::varchar);
+    contraseniaV := EXISTS(SELECT contrasenia FROM usuario WHERE correo = correoString AND contrasenia = contraseniaU);
+    
  RETURN contraseniaV;
 END;
 $contraseniaValida$ 
